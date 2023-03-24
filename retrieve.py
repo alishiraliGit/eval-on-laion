@@ -9,7 +9,13 @@ import configs
 
 
 def download_image(url):
-    image = Image.open(BytesIO(requests.get(url, timeout=configs.RetrieveConfig.IMAGE_DOWNLOAD_TIMEOUT).content))
+    content = requests.get(url, timeout=configs.RetrieveConfig.IMAGE_DOWNLOAD_TIMEOUT).content
+
+    image = Image.open(BytesIO(content))
+
+    image.verify()  # Will close the image
+
+    image = Image.open(BytesIO(content))
 
     if image.mode != 'RGB':
         raise Exception('Image mode is %s.' % image.mode)

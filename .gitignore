@@ -1,0 +1,11 @@
+*.DS_STORE
+__pycache__
+.ipynb_checkpoints
+laionenv
+.idea
+*.pyc
+*.cpython-38.pyc
+laion400m
+safe
+figs
+*.ipynb

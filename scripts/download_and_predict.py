@@ -17,9 +17,9 @@ from retrieve import download_image
 from models import model_names, processors, models
 
 
-def setup(event):
+def setup(ev):
     global unpaused
-    unpaused = event
+    unpaused = ev
 
 
 def download_image_wrapper(args):
@@ -28,7 +28,7 @@ def download_image_wrapper(args):
         image = download_image(row['URL'])
         return idx, image
     except Exception as e:
-        return -1, e
+        return -1, str(e)
 
 
 def predict_dummy(idx_image_list):
@@ -169,9 +169,9 @@ if __name__ == '__main__':
                     model2pred[model_name] = model_df_i
                 else:
                     model2pred[model_name] = pd.concat((model2pred[model_name], model_df_i), axis=0)
-            except Exception as e:
+            except Exception as ex:
                 errors.append(f'in concat. result {i_pred} of model {model_name}, following error happened:\n')
-                errors.append(str(e))
+                errors.append(str(ex))
                 errors.append('\n\n')
 
     # ----- Save the successful indices ------
@@ -186,5 +186,3 @@ if __name__ == '__main__':
         f.write(''.join(errors))
 
     print('done!')
-
-
