@@ -78,7 +78,7 @@ if __name__ == '__main__':
         configs.LAIONConfig.SAMPLED_LABELED_PREFIX \
         + lt.get_laion_subset_file_name(0, settings['laion_until_part'])
 
-    df = pd.read_parquet(os.path.join(settings['laion_path'], subset_file_name)).iloc[:1000]
+    df = pd.read_parquet(os.path.join(settings['laion_path'], subset_file_name))
 
     # Load wnid2sampledlaionindices
     sampled_map_file_name = f'ILSVRC2012_wnid2sampledlaionindices.pkl'
