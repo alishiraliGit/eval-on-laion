@@ -8,20 +8,30 @@ from io import BytesIO
 import configs
 
 
-def download_image(url):
-    content = requests.get(url, timeout=configs.RetrieveConfig.IMAGE_DOWNLOAD_TIMEOUT).content
-
-    image = Image.open(BytesIO(content))
-
-    image.verify()  # Will close the image
-
-    image = Image.open(BytesIO(content))
+def verify_image(image_content):
+    image = Image.open(BytesIO(image_content))
 
     if image.mode != 'RGB':
         raise Exception('Image mode is %s.' % image.mode)
 
     if np.prod(image.size) < configs.RetrieveConfig.MIN_IMAGE_SIZE:
         raise Exception('Image is too small.')
+
+    image.verify()
+
+
+def download_image_content(url):
+    content = requests.get(url, timeout=configs.RetrieveConfig.IMAGE_DOWNLOAD_TIMEOUT).content
+
+    return content
+
+
+def download_image(url):
+    content = download_image_content(url)
+
+    verify_image(content)
+
+    image = Image.open(BytesIO(content))
 
     return image
 

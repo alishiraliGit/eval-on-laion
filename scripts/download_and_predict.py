@@ -3,7 +3,8 @@ import os
 import multiprocessing
 import time
 import argparse
-
+from PIL import Image
+from io import BytesIO
 import pandas as pd
 import pickle
 from tqdm.auto import tqdm
@@ -13,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 import configs
 import tools.laion_tools as lt
 import tools.hugging_face_tools as hft
-from retrieve import download_image
+from retrieve import download_image_content, verify_image
 from models import model_names, processors, models
 
 
@@ -25,29 +26,35 @@ def setup(ev):
 def download_image_wrapper(args):
     idx, row = args
     try:
-        image = download_image(row['URL'])
-        return idx, image
+        image_content = download_image_content(row['URL'])
+        verify_image(image_content)
+        return idx, image_content
     except Exception as e:
         return -1, str(e)
-
-
-def predict_dummy(idx_image_list):
-    for idx, image in idx_image_list:
-        return idx
 
 
 def predict(args):
     idx_image_list, mdl2label2wnids = args
 
-    images = [image for idx, image in idx_image_list if idx >= 0]
-    indices = [idx for idx, image in idx_image_list if idx >= 0]
+    # Load the images
+    images = []
+    indices = []
+    for idx, image_content in idx_image_list:
+        try:
+            image = Image.open(BytesIO(image_content))
+            images.append(image)
+            indices.append(idx)
+        except Exception:
+            continue
+
+    # Predict
     mdl2pred = {}
     try:
         for mdl_name in model_names:
             mdl2pred[mdl_name] = hft.predict(processors[mdl_name], models[mdl_name], mdl2label2wnids[mdl_name], images)
         return indices, mdl2pred
     except Exception as e:
-        return [], e
+        return [], str(e)
 
 
 def num_ready_results(results):
@@ -162,6 +169,9 @@ if __name__ == '__main__':
     for i_pred, pred_res in tqdm(enumerate(prediction_results), desc='concatenate results'):
         success_indices_i, model2pred_i = pred_res.get()
 
+        if len(success_indices_i) == 0:
+            continue
+
         for model_name in model_names:
             try:
                 model_df_i = pd.DataFrame(model2pred_i[model_name], index=success_indices_i)
@@ -178,10 +188,10 @@ if __name__ == '__main__':
     print('saving ....')
 
     for model_name in model_names:
-        pred_file_name = f'ILSVRC2012_predictions({model_name}).csv'
+        pred_file_name = f'ILSVRC2012_predictions[{model_name}]_{time.strftime("%d-%m-%Y_%H-%M-%S")}.csv'
         model2pred[model_name].to_csv(os.path.join(settings['map_path'], pred_file_name), index=True)
 
-    err_file_name = f'ILSVRC2012_predictions_error.txt'
+    err_file_name = f'ILSVRC2012_predictions_error_{time.strftime("%d-%m-%Y_%H-%M-%S")}.txt'
     with open(os.path.join(settings['map_path'], err_file_name), 'w') as f:
         f.write(''.join(errors))
 

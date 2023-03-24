@@ -5,7 +5,7 @@ laionenv
 .idea
 *.pyc
 *.cpython-38.pyc
-laion400m
+imgs
 safe
 figs
 *.ipynb
