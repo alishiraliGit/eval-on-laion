@@ -101,8 +101,8 @@ if __name__ == '__main__':
     )
 
     model2label2wnids = {}
-    for model_name in model_names:
-        model2label2wnids[model_name] = hft.get_label2wnids_map(models[model_name], id_lemmas_df)
+    for model_name in tqdm(model_names, desc='mapping model outputs to desired classes'):
+        model2label2wnids[model_name] = hft.get_label2wnids_map(models[model_name], id_lemmas_df, verbose=False)
 
     # ----- Parallel download and predict -----
     event = multiprocessing.Event()
