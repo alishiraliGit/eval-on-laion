@@ -9,3 +9,5 @@ imgs
 safe
 figs
 *.ipynb
+clip_text_embeddings
+part*.parquet

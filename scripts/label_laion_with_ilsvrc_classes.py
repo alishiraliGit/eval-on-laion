@@ -8,7 +8,7 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-import tools.laion_tools as lt
+import utils.laion_utils as laionu
 
 
 def main():
@@ -42,11 +42,11 @@ def main():
         lemma2wnid = pickle.load(f)
 
     # Load a part of LAION
-    laion_file_path = os.path.join(params['laion_path'], lt.get_laion_part_file_name(params['laion_part']))
+    laion_file_path = os.path.join(params['laion_path'], laionu.get_laion_part_file_name(params['laion_part']))
     if not os.path.exists(laion_file_path):
         if params['verbose']:
             print(f'downloading LAION part {params["laion_part"]} ...')
-        lt.download_laion_part(part=params['laion_part'], laion_path=params['laion_path'])
+        laionu.download_laion_part(part=params['laion_part'], laion_path=params['laion_path'])
 
     if params['verbose']:
         print(f'loading LAION part {params["laion_part"]} ...')
@@ -59,9 +59,9 @@ def main():
                     disable=not params['verbose']):
 
         try:
-            txt = lt.transform_text(df.loc[idx, 'TEXT'])
+            txt = laionu.transform_text(df.loc[idx, 'TEXT'])
 
-            wnid_set_i = {wnid for lemma, wnid in lemma2wnid.items() if lt.transform_lemma(lemma) in txt}
+            wnid_set_i = {wnid for lemma, wnid in lemma2wnid.items() if laionu.transform_lemma(lemma) in txt}
         except Exception as e:
             print(e)
             continue
@@ -94,7 +94,7 @@ def main():
     # Save the labeled data
     df_labeled = df.loc[laion_labeled_indices]
 
-    subset_file_name = configs.LAIONConfig.LABELED_PREFIX + lt.get_laion_part_file_name(params['laion_part'])
+    subset_file_name = configs.LAIONConfig.LABELED_PREFIX + laionu.get_laion_part_file_name(params['laion_part'])
 
     df_labeled.to_parquet(os.path.join(params['laion_path'], subset_file_name), index=True)
 

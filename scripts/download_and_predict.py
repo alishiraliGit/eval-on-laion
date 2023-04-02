@@ -12,10 +12,13 @@ from tqdm.auto import tqdm
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-import tools.laion_tools as lt
-import tools.hugging_face_tools as hft
+import utils.laion_utils as laionu
+import utils.hugging_face_utils as hfu
 from retrieve import download_image_content, verify_image
-from models import model_names, processors, models
+from models import PredictorsPartition, select_imagenet_models
+
+
+unpaused = None
 
 
 def setup(ev):
@@ -51,7 +54,7 @@ def predict(args):
     mdl2pred = {}
     try:
         for mdl_name in model_names:
-            mdl2pred[mdl_name] = hft.predict(processors[mdl_name], models[mdl_name], mdl2label2wnids[mdl_name], images)
+            mdl2pred[mdl_name] = hfu.predict(processors[mdl_name], models[mdl_name], mdl2label2wnids[mdl_name], images)
         return indices, mdl2pred
     except Exception as e:
         return [], str(e)
@@ -79,11 +82,18 @@ if __name__ == '__main__':
     # Convert to dictionary
     settings = vars(parser.parse_args())
 
+    # ----- Select the models -----
+    model_names, processors, models = select_imagenet_models([
+        PredictorsPartition.IMAGENET_1K,
+        PredictorsPartition.IMAGENET_PT21k_FT1K,
+        PredictorsPartition.IMAGENET_21K
+    ])
+
     # ----- Load data and maps -----
     # Load LAION sampled
     subset_file_name = \
         configs.LAIONConfig.SAMPLED_LABELED_PREFIX \
-        + lt.get_laion_subset_file_name(0, settings['laion_until_part'])
+        + laionu.get_laion_subset_file_name(0, settings['laion_until_part'])
 
     df = pd.read_parquet(os.path.join(settings['laion_path'], subset_file_name))
 
@@ -102,7 +112,7 @@ if __name__ == '__main__':
 
     model2label2wnids = {}
     for model_name in tqdm(model_names, desc='mapping model outputs to desired classes'):
-        model2label2wnids[model_name] = hft.get_label2wnids_map(models[model_name], id_lemmas_df, verbose=False)
+        model2label2wnids[model_name] = hfu.get_label2wnids_map(models[model_name], id_lemmas_df, verbose=False)
 
     # ----- Parallel download and predict -----
     event = multiprocessing.Event()
@@ -120,7 +130,7 @@ if __name__ == '__main__':
     for down_res in tqdm(download_results, desc='(mostly) downloading', total=len(df), leave=True):
         # Append the downloaded image to the batch
         download_ready_results.append(down_res)
-        if len(download_ready_results) < configs.LAIONConfig.BATCH_SIZE:
+        if len(download_ready_results) < configs.ImageNetModelsConfig.BATCH_SIZE:
             continue
 
         # Send the batch for prediction

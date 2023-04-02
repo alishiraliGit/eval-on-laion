@@ -8,7 +8,7 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-import tools.laion_tools as lt
+import utils.laion_utils as lt
 from retrieve import download_and_save_image
 
 
@@ -72,4 +72,3 @@ if __name__ == '__main__':
         'successful_indices_' + lt.get_laion_subset_file_name(0, settings['laion_until_part'])
     with open(os.path.join(settings['laion_path'], successful_indices_file_name), 'wb') as f:
         pickle.dump(successful_indices, f)
-

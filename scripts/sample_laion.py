@@ -8,7 +8,7 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-import tools.laion_tools as lt
+import utils.laion_utils as laionu
 
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     for part in tqdm(range(configs.LAIONConfig.NUM_PARTS), desc='loading labeled data and maps'):
         laion_part_file_path = os.path.join(
             settings['laion_path'],
-            configs.LAIONConfig.LABELED_PREFIX + lt.get_laion_part_file_name(part)
+            configs.LAIONConfig.LABELED_PREFIX + laionu.get_laion_part_file_name(part)
         )
 
         if not os.path.exists(laion_part_file_path):
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         part_df = pd.read_parquet(laion_part_file_path)
 
         # Reindex
-        part_dfs.append(lt.rename_index(part_df, part))
+        part_dfs.append(laionu.rename_index(part_df, part))
 
         # Load wnid2laion map
         map_file_name = f'ILSVRC2012_wnid2laionindices(part{part}).pkl'
@@ -50,7 +50,7 @@ if __name__ == '__main__':
             if wnid not in wnid2laionindices:
                 wnid2laionindices[wnid] = []
 
-            wnid2laionindices[wnid].extend([lt.map_index(idx, part) for idx in laionpartindices])
+            wnid2laionindices[wnid].extend([laionu.map_index(idx, part) for idx in laionpartindices])
 
     # Concat part dfs
     df = pd.concat(part_dfs, axis=0)
@@ -72,10 +72,10 @@ if __name__ == '__main__':
     # Uniform samples
     wnid2uniformlaionindices = {}
     for wnid, laionindices in tqdm(wnid2laionindices.items(), desc='uniform sampling'):
-        wnid2uniformlaionindices[wnid] = laionindices[:configs.LAIONConfig.UNIFORM_SAMPLES]
+        wnid2uniformlaionindices[wnid] = laionindices[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
 
     # Samples from different ranges of CLIP similarity
-    sim_bins = lt.icdf_bins(df)
+    sim_bins = laionu.icdf_bins(df)
     wnid2icdflaionindices = {}
     for wnid, laionindices in tqdm(wnid2laionindices.items(), desc='icdf sampling'):
         wnid2icdflaionindices[wnid] = []
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             lb = sim_bins[i_b]
             rb = sim_bins[i_b + 1]
             bin_indices = laionindices[np.logical_and(sims >= lb, sims < rb)]
-            wnid2icdflaionindices[wnid].extend(bin_indices[:configs.LAIONConfig.SAMPLES_PER_SIMILARITY_BIN])
+            wnid2icdflaionindices[wnid].extend(bin_indices[:configs.LAIONSamplingConfig.SAMPLES_PER_SIMILARITY_BIN])
 
     # Union samples
     wnid2sampledlaionindices = {}
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # Save sampled LAION dataframe
     subset_file_name = \
         configs.LAIONConfig.SAMPLED_LABELED_PREFIX \
-        + lt.get_laion_subset_file_name(min(found_parts), max(found_parts))
+        + laionu.get_laion_subset_file_name(min(found_parts), max(found_parts))
 
     sampled_df.to_parquet(os.path.join(settings['laion_path'], subset_file_name), index=True)
 

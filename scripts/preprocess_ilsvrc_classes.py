@@ -5,7 +5,7 @@ import pickle
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
-from tools.wordnet_tools import lemma_is_unique, extend_with_well_known_hypernym
+from utils.wordnet_utils import lemma_is_unique, extend_with_well_known_hypernym
 
 
 def main():

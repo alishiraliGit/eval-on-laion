@@ -1,8 +1,6 @@
-import numpy as np
 import torch
-from transformers import CLIPProcessor, CLIPModel
 
-import configs
+from utils import pytorch_utils as ptu
 
 
 def get_label2wnids_map(model, id_lemmas_df, verbose=True):
@@ -22,6 +20,8 @@ def get_label2wnids_map(model, id_lemmas_df, verbose=True):
 def predict(processor, model, label2wnids, images):
     inputs = processor(images=images, return_tensors='pt')
 
+    inputs.to(ptu.device)
+
     include_labels = list(label2wnids.keys())
 
     with torch.no_grad():
@@ -38,22 +38,3 @@ def predict(processor, model, label2wnids, images):
             wnids_pr.append(wnids_pr_i)
 
         return wnids_pr
-
-
-class CLIP:
-    def __init__(self, ver=configs.CLIPConfig.DEFAULT_VERSION):
-        self.processor = CLIPProcessor.from_pretrained(f'openai/{ver}')
-        self.model = CLIPModel.from_pretrained(f'openai/{ver}')
-
-    def similarities(self, texts, images, trunc=True) -> np.ndarray:
-        inputs = self.processor(text=texts, images=images, return_tensors='pt', padding=True)
-
-        if trunc:
-            inputs['input_ids'] = inputs['input_ids'][:, :configs.CLIPConfig.MAX_SEQ_LENGTH]
-            inputs['attention_mask'] = inputs['attention_mask'][:, :configs.CLIPConfig.MAX_SEQ_LENGTH]
-
-        outputs = self.model(**inputs)
-
-        sims = torch.diag(outputs.logits_per_image)
-        # Divide by 100: Based on my observations, this number will be cosine similarity.
-        return sims.detach().numpy()/100
