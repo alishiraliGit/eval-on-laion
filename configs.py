@@ -9,6 +9,13 @@ class CLIPConfig:
     BATCH_SIZE = 64  # 512
     DIM = 512
     REPLACE_NA_STR = 'None'
+    METRIC_TYPE = 'ip'
+
+
+class AutoFaissConfig:
+    MIN_NN = 50
+    MAX_INDEX_MEMORY = '%dMB' % int(1e6 / 4e8 * 16000)
+    CURRENT_MEMORY = '8GB'
 
 
 class ImageNetModelsConfig:

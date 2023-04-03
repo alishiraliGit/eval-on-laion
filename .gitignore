@@ -2,6 +2,7 @@
 __pycache__
 .ipynb_checkpoints
 laionenv
+laionvenv
 .idea
 *.pyc
 *.cpython-38.pyc
@@ -12,3 +13,4 @@ figs
 clip_text_embeddings
 clip_text_indices
 part*.parquet
+faiss_index
