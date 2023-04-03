@@ -74,6 +74,8 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
 
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'clip_text_embeddings'))
+    parser.add_argument('--indices_save_path', type=str,
+                        default=os.path.join('laion400m', 'processed', 'clip_text_indices'))
 
     # Size
     parser.add_argument('--n_sample', type=int)
@@ -98,13 +100,14 @@ if __name__ == '__main__':
 
     # Path
     os.makedirs(params['save_path'], exist_ok=True)
+    os.makedirs(params['indices_save_path'], exist_ok=True)
 
     #  Revisit params to be a multiple of batch size
-    num_sample = (params['n_sample'] // configs.CLIPConfig.BATCH_SIZE + 1) * configs.CLIPConfig.BATCH_SIZE
-    print_verbose(f'{num_sample} total samples will be used.')
-
     chunk_size = (params['chunk_size'] // configs.CLIPConfig.BATCH_SIZE + 1) * configs.CLIPConfig.BATCH_SIZE
-    print_verbose(f'Each numpy stored file will contain {chunk_size} samples.')
+    print_verbose(f'Each npy file will contain {chunk_size} embeddings.')
+
+    num_sample = (params['n_sample'] // chunk_size + 1) * chunk_size
+    print_verbose(f'{num_sample} total samples will be used.')
 
     # ----- Load data -----
     df = load_data(params['laion_path'], num_sample, params['self_destruct'])
@@ -114,25 +117,42 @@ if __name__ == '__main__':
 
     # ----- Loop over data chunks ------
     embeds = np.zeros((chunk_size, configs.CLIPConfig.DIM))
+    indices = np.zeros((chunk_size,)).astype(int)
     for iloc in tqdm(range(0, len(df), configs.CLIPConfig.BATCH_SIZE),
                      desc='getting clip text embeddings', disable=not logu.verbose):
         rng = range(iloc, iloc + configs.CLIPConfig.BATCH_SIZE)
 
         # Extract a batch
-        texts_batch = df.iloc[rng]['TEXT'].tolist()
-        indices_batch = df.index[rng]
+        texts_batch = df.iloc[rng]['TEXT'].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
+        indices_batch = df.index[rng].to_numpy(dtype=int)
 
-        # Get embeddings
-        embeds_batch = clip.text_embeds(texts_batch)
+        try:
+            # Get embeddings
+            embeds_batch = clip.text_embeds(texts_batch)
 
-        # Normalize
-        embeds_batch_norm = normalize(embeds_batch, axis=1, norm='l2')
+            # Normalize
+            embeds_batch_norm = normalize(embeds_batch, axis=1, norm='l2')
+
+        except Exception as e:
+            print(str(e))
+            embeds_batch_norm = np.zeros((configs.CLIPConfig.BATCH_SIZE, configs.CLIPConfig.DIM))
 
         # Add to the chunk
-        embeds[(iloc % chunk_size): (iloc % chunk_size) + configs.CLIPConfig.BATCH_SIZE] = embeds_batch_norm
+        chunk_rng = range(iloc % chunk_size, (iloc % chunk_size) + configs.CLIPConfig.BATCH_SIZE)
+        indices[chunk_rng] = indices_batch
+        embeds[chunk_rng] = embeds_batch_norm
 
         # Save the chunk if full
-        if (iloc % chunk_size) + configs.CLIPConfig.BATCH_SIZE == chunk_size:
+        if chunk_rng[-1] == chunk_size - 1:
             i_chunk = iloc // chunk_size  # Starts from 0
-            with open(os.path.join(params['save_path'], f'part{i_chunk}.npy'), 'wb') as f:
+
+            with open(os.path.join(params['indices_save_path'], 'indices-%05d.npy' % i_chunk), 'wb') as f:
+                # noinspection PyTypeChecker
+                np.save(f, indices)
+
+            with open(os.path.join(params['save_path'], 'embeddings-%05d.npy' % i_chunk), 'wb') as f:
+                # noinspection PyTypeChecker
                 np.save(f, embeds)
+
+            indices *= 0
+            embeds *= 0

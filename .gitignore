@@ -10,4 +10,5 @@ safe
 figs
 *.ipynb
 clip_text_embeddings
+clip_text_indices
 part*.parquet

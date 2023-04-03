@@ -39,6 +39,10 @@ def select_imagenet_models(partitions):
         else:
             raise Exception(f"Cannot find the model specified: {partition}")
 
+    # Init.
+    processors = [processor() for processor in processors]
+    models = [model() for model in models]
+
     return model_names, processors, models
 
 
@@ -48,13 +52,13 @@ def select_imagenet_models(partitions):
 model_names_1k = ['ResNet-50-1k', 'ConvNeXT-1k']
 
 processors_1k = {
-    'ResNet-50-1k': ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224'),  # Works, w/o warning
-    'ConvNeXT-1k': ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224')
+    'ResNet-50-1k': lambda: ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224'),  # Works, w/o warning
+    'ConvNeXT-1k': lambda: ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224')
 }
 
 models_1k = {
-    'ResNet-50-1k': ResNetForImageClassification.from_pretrained('microsoft/resnet-50'),
-    'ConvNeXT-1k': ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224')
+    'ResNet-50-1k': lambda: ResNetForImageClassification.from_pretrained('microsoft/resnet-50'),
+    'ConvNeXT-1k': lambda: ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224')
 }
 
 
@@ -64,15 +68,15 @@ models_1k = {
 model_names_pt21k_ft1k = ['ConvNeXT-21k-1k', 'ViT-21k-1k', 'BEiT-21k-1k']
 
 processors_pt21k_ft1k = {
-    'ConvNeXT-21k-1k': ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224-22k-1k'),
-    'ViT-21k-1k': ViTImageProcessor.from_pretrained('google/vit-base-patch16-224'),
-    'BEiT-21k-1k': BeitImageProcessor.from_pretrained('microsoft/beit-base-patch16-224')
+    'ConvNeXT-21k-1k': lambda: ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224-22k-1k'),
+    'ViT-21k-1k': lambda: ViTImageProcessor.from_pretrained('google/vit-base-patch16-224'),
+    'BEiT-21k-1k': lambda: BeitImageProcessor.from_pretrained('microsoft/beit-base-patch16-224')
 }
 
 models_pt21k_ft1k = {
-    'ConvNeXT-21k-1k': ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224-22k-1k'),
-    'ViT-21k-1k': ViTForImageClassification.from_pretrained('google/vit-base-patch16-224'),
-    'BEiT-21k-1k': BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224')
+    'ConvNeXT-21k-1k': lambda: ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224-22k-1k'),
+    'ViT-21k-1k': lambda: ViTForImageClassification.from_pretrained('google/vit-base-patch16-224'),
+    'BEiT-21k-1k': lambda: BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224')
 }
 
 
@@ -82,13 +86,13 @@ models_pt21k_ft1k = {
 model_names_21k = ['ConvNeXT-21k', 'BEiT-21k']
 
 processors_21k = {
-    'ConvNeXT-21k': ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224-22k'),
-    'BEiT-21k': BeitImageProcessor.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
+    'ConvNeXT-21k': lambda: ConvNextImageProcessor.from_pretrained('facebook/convnext-base-224-22k'),
+    'BEiT-21k': lambda: BeitImageProcessor.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
 }
 
 models_21k = {
-    'ConvNeXT-21k': ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224-22k'),
-    'BEiT-21k': BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
+    'ConvNeXT-21k': lambda: ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224-22k'),
+    'BEiT-21k': lambda: BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
 }
 
 
