@@ -53,10 +53,10 @@ if __name__ == '__main__':
     parser.add_argument('--laion_part', type=int)
 
     parser.add_argument('--indices_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices_test.npy'))
+                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices.npy'))
 
     parser.add_argument('--faiss_index_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn_test.index'))
+                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn.index'))
 
     # Size
     parser.add_argument('--chunk_size', type=int)
@@ -100,6 +100,13 @@ if __name__ == '__main__':
 
         print_verbose('done!')
 
+    # ----- Load the index -----
+    print_verbose('loading the index ...')
+
+    faiss_index = faiss.read_index(params['faiss_index_path'])
+
+    print_verbose('done!')
+
     # ----- Init. CLIP -----
     clip = CLIP()
 
@@ -138,22 +145,20 @@ if __name__ == '__main__':
         if chunk_rng[-1] == chunk_size - 1 or rng[-1] == len(df) - 1:
             i_chunk = iloc // chunk_size  # Starts from 0
 
-            # Load the index
-            faiss_index = faiss.read_index(params['faiss_index_path'])
-
             # Add to the index
+            print_verbose('adding to the index ...')
             faiss_index.add(embeds[:chunk_cnt])
+            print_verbose('done!')
 
             # Save the index
+            print_verbose('saving the index ...')
             faiss.write_index(faiss_index, params['faiss_index_path'])
+            print_verbose('done!')
 
             # Update the indices
-            with open(params['indices_path'], 'rb') as f:
-                # noinspection PyTypeChecker
-                all_indices = np.load(f)
-
             all_indices = np.append(all_indices, indices[:chunk_cnt])
 
+            # Save the indices
             with open(params['indices_path'], 'wb') as f:
                 # noinspection PyTypeChecker
                 np.save(f, all_indices)
