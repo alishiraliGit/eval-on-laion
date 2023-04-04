@@ -16,11 +16,12 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 
 
-def load_data(laion_path, n_sample, self_destruct):
+def load_data(laion_path, n_sample, last_idx, self_destruct):
     # Load as much as required to obtain n_sample
     part_dfs = []
     total_samples = 0
     laion_part = 0
+    start_storing = False
     while True:
         # Download if required
         laion_file_path = os.path.join(laion_path, laionu.get_laion_part_file_name(laion_part))
@@ -42,8 +43,17 @@ def load_data(laion_path, n_sample, self_destruct):
 
             print_verbose('done!')
 
+        # Check if should start storing
+        if (not start_storing) and (last_idx in part_df.index):
+            part_df = part_df.iloc[part_df.index.get_loc(last_idx) + 1:]
+            start_storing = True
+
+        if part_df.index[0] > last_idx:
+            start_storing = True
+
         # Count the samples
-        total_samples += len(part_df)
+        if start_storing:
+            total_samples += len(part_df)
 
         # Check if sufficient
         if total_samples >= n_sample:
@@ -51,8 +61,9 @@ def load_data(laion_path, n_sample, self_destruct):
             part_df = part_df.iloc[:(n_sample - total_samples)]
             total_samples += len(part_df)
 
-        # Reindex
-        part_dfs.append(laionu.rename_index(part_df, laion_part))
+        # Reindex and add
+        if start_storing:
+            part_dfs.append(laionu.rename_index(part_df, laion_part))
 
         if total_samples >= n_sample:
             break
@@ -80,6 +91,8 @@ if __name__ == '__main__':
     # Size
     parser.add_argument('--n_sample', type=int)
     parser.add_argument('--chunk_size', type=int)
+    parser.add_argument('--last_index', type=int, default=-1)
+    parser.add_argument('--find_last_index', action='store_true')
 
     # Compute
     parser.add_argument('--no_gpu', action='store_true')
@@ -102,15 +115,25 @@ if __name__ == '__main__':
     os.makedirs(params['save_path'], exist_ok=True)
     os.makedirs(params['indices_save_path'], exist_ok=True)
 
-    #  Revisit params to be a multiple of batch size
+    # Revisit params to be a multiple of batch size
     chunk_size = (params['chunk_size'] // configs.CLIPConfig.BATCH_SIZE + 1) * configs.CLIPConfig.BATCH_SIZE
     print_verbose(f'Each npy file will contain {chunk_size} embeddings.')
 
     num_sample = (params['n_sample'] // chunk_size + 1) * chunk_size
     print_verbose(f'{num_sample} total samples will be used.')
 
+    # Find last_index if asked
+    if params['find_last_index']:
+        with open(os.path.join(params['indices_save_path'], 'all_indices.npy'), 'rb') as f:
+            # noinspection PyTypeChecker
+            all_indices = np.load(f)
+        last_index = np.max(all_indices)
+        print_verbose(f'last index found at {last_index}.')
+    else:
+        last_index = params['last_index']
+
     # ----- Load data -----
-    df = load_data(params['laion_path'], num_sample, params['self_destruct'])
+    df = load_data(params['laion_path'], num_sample, last_index, params['self_destruct'])
 
     # ----- Init. CLIP -----
     clip = CLIP()
@@ -144,7 +167,7 @@ if __name__ == '__main__':
 
         # Save the chunk if full
         if chunk_rng[-1] == chunk_size - 1:
-            i_chunk = iloc // chunk_size  # Starts from 0
+            i_chunk = (iloc + last_index + 1) // chunk_size  # Starts from 0
 
             with open(os.path.join(params['indices_save_path'], 'indices-%05d.npy' % i_chunk), 'wb') as f:
                 # noinspection PyTypeChecker

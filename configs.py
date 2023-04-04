@@ -41,3 +41,10 @@ class LAIONSamplingConfig:
 class RetrieveConfig:
     IMAGE_DOWNLOAD_TIMEOUT = 5
     MIN_IMAGE_SIZE = 10*10
+
+
+class GDriveConfig:
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    EMB_FOLDER_ID = '1-s-Drt1IecCgodj7u7bwhEho7ZLY8CPa'
+    IND_FOLDER_ID = '1-uuFos6XucFIRsU-7SdPn8uy65FYBFwu'
+    CRED_FILE_NAME = 'client_secret_756745105460-2en3aa9elbhsni4k10u8o2utmc0l5mjn.apps.googleusercontent.com.json'

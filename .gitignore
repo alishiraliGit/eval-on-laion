@@ -14,3 +14,6 @@ clip_text_embeddings
 clip_text_indices
 part*.parquet
 faiss_index
+credentials
+clip_text_embeddings_downloaded
+clip_text_indices_downloaded
