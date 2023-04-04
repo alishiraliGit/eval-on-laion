@@ -20,7 +20,7 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
     # Load as much as required to obtain n_sample
     part_dfs = []
     total_samples = 0
-    laion_part = 0
+    laion_part = laionu.get_part_from_mapped_index(last_idx + 1)
     start_storing = False
     while True:
         # Download if required
@@ -43,6 +43,9 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
 
             print_verbose('done!')
 
+        # Rename index
+        part_df = laionu.rename_index(part_df, laion_part)
+
         # Check if should start storing
         if (not start_storing) and (last_idx in part_df.index):
             part_df = part_df.iloc[part_df.index.get_loc(last_idx) + 1:]
@@ -63,7 +66,7 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
 
         # Reindex and add
         if start_storing:
-            part_dfs.append(laionu.rename_index(part_df, laion_part))
+            part_dfs.append(part_df)
 
         if total_samples >= n_sample:
             break

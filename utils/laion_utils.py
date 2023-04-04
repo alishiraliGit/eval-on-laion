@@ -26,6 +26,10 @@ def map_index(idx, part):
     return idx + part*configs.LAIONConfig.INDEX_SHIFT_PER_PART
 
 
+def get_part_from_mapped_index(idx):
+    return idx // configs.LAIONConfig.INDEX_SHIFT_PER_PART
+
+
 def rename_index(df, part):
     return df.rename(mapper=lambda idx: map_index(idx, part))
 
