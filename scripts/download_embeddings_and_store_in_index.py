@@ -97,7 +97,9 @@ if __name__ == '__main__':
         # Check if any exists in current indices
         print_verbose('checking for duplicates in the new indices ...')
 
-        keep_mask = [(idx not in all_indices) for idx in new_indices]
+        _, intersec_locs, _ = np.intersect1d(new_indices, all_indices, return_indices=True)
+        keep_mask = np.ones(new_indices.shape).astype(bool)
+        keep_mask[intersec_locs] = False
 
         print_verbose('done!')
 
@@ -158,4 +160,3 @@ if __name__ == '__main__':
         tot_job = len(tbd_indfileid2name)
         print_verbose('===== \n%d from %d done! (time since start: %g s, time per item: %g s, est. remaining: %g s)'
                       % (job_cnt, tot_job, dt, dt/job_cnt, (tot_job - job_cnt)*dt/job_cnt))
-
