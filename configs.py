@@ -6,7 +6,7 @@ class WordNetConfig:
 class CLIPConfig:
     DEFAULT_VERSION = 'clip-vit-base-patch32'
     MAX_SEQ_LENGTH = 77  # Based on my observations, num of tokens shouldn't exceed 77. Currently, useless.
-    BATCH_SIZE = 64  # 512
+    BATCH_SIZE = 64
     DIM = 512
     REPLACE_NA_STR = 'None'
     METRIC_TYPE = 'ip'

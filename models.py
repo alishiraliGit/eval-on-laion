@@ -40,6 +40,7 @@ def select_imagenet_models(partitions):
             raise Exception(f"Cannot find the model specified: {partition}")
 
     # Init.
+    # TODO: Move to ptu.device
     processors = [processor() for processor in processors]
     models = [model() for model in models]
 

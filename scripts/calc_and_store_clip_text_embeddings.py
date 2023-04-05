@@ -1,5 +1,6 @@
 import sys
 import os
+import gc
 import argparse
 import pandas as pd
 from tqdm import tqdm
@@ -22,7 +23,7 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
     total_samples = 0
     laion_part = laionu.get_part_from_mapped_index(last_idx + 1)
     start_storing = False
-    while True:
+    while laion_part < configs.LAIONConfig.NUM_PARTS:
         # Download if required
         laion_file_path = os.path.join(laion_path, laionu.get_laion_part_file_name(laion_part))
         if not os.path.exists(laion_file_path):
@@ -67,12 +68,16 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
         # Reindex and add
         if start_storing:
             part_dfs.append(part_df)
+        else:
+            del part_df
 
         if total_samples >= n_sample:
             break
 
         # Step
         laion_part += 1
+
+        gc.collect()
 
     # Concat part dfs
     concat_df = pd.concat(part_dfs, axis=0)
@@ -98,6 +103,7 @@ if __name__ == '__main__':
     parser.add_argument('--find_last_index', action='store_true')
 
     # Compute
+    parser.add_argument('--gpu_id', type=int, default=0)
     parser.add_argument('--no_gpu', action='store_true')
 
     # Logging
@@ -111,7 +117,7 @@ if __name__ == '__main__':
 
     # ----- Init. -----
     # Env
-    ptu.init_gpu(not params['no_gpu'])
+    ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
     logu.verbose = params['verbose']
 
     # Path
