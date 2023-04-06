@@ -57,10 +57,10 @@ if __name__ == '__main__':
     parser.add_argument('--laion_part', type=int)
 
     parser.add_argument('--indices_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices_test.npy'))
+                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices.npy'))
 
     parser.add_argument('--faiss_index_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn_test.index'))
+                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn.index'))
 
     # Size
     parser.add_argument('--chunk_size', type=int)
