@@ -48,14 +48,14 @@ def transform_text(txt):
 
 def icdf_bins(df):
     # Find CDF
-    sim_rng = configs.LAIONConfig.SIMILARITY_BINS_RANGE
+    sim_rng = configs.LAIONSamplingConfig.SIMILARITY_BINS_RANGE
     xs = np.linspace(sim_rng[0], sim_rng[1], 1000)
     cdfs = np.zeros(xs.shape)
     for i_x, x in enumerate(xs):
         cdfs[i_x] = np.mean(df['similarity'] <= x)
 
     # Find ICDF
-    dp = configs.LAIONConfig.SIMILARITY_BINS_DELTA_P
+    dp = configs.LAIONSamplingConfig.SIMILARITY_BINS_DELTA_P
     i_x = 0
     cdf_0 = cdfs[0]
     icdfs = [xs[0]]

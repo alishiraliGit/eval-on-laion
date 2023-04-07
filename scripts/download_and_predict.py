@@ -15,7 +15,7 @@ import configs
 import utils.laion_utils as laionu
 import utils.hugging_face_utils as hfu
 from retrieve import download_image_content, verify_image
-from models import PredictorsPartition, select_imagenet_models
+from core.ilsvrc_predictors import ILSVRCPredictorType, select_ilsvrc_predictors
 
 
 unpaused = None
@@ -83,10 +83,10 @@ if __name__ == '__main__':
     settings = vars(parser.parse_args())
 
     # ----- Select the models -----
-    model_names, processors, models = select_imagenet_models([
-        PredictorsPartition.IMAGENET_1K,
-        PredictorsPartition.IMAGENET_PT21k_FT1K,
-        PredictorsPartition.IMAGENET_21K
+    model_names, processors, models = select_ilsvrc_predictors([
+        ILSVRCPredictorType.IMAGENET_1K,
+        ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
+        ILSVRCPredictorType.IMAGENET_21K
     ])
 
     # ----- Load data and maps -----

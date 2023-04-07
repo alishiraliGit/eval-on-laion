@@ -10,7 +10,7 @@ from sklearn.preprocessing import normalize
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-from models import CLIP
+from core.clip import CLIP
 from utils import laion_utils as laionu
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu

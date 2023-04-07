@@ -5,12 +5,12 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from sklearn.preprocessing import normalize
-import faiss
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-from models import CLIP
+from core.clip import CLIP
+from core.faiss_index import FaissIndex
 from utils import laion_utils as laionu
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu
@@ -95,20 +95,13 @@ if __name__ == '__main__':
     # ----- Load data -----
     df = load_data_part(params['laion_path'], params['laion_part'], params['self_destruct'])
 
-    # ----- Load indices -----
-    print_verbose('loading indices ...')
-
-    with open(params['indices_path'], 'rb') as f:
-        # noinspection PyTypeChecker
-        all_indices = np.load(f)
-    print_verbose(f'\tfound {len(all_indices)} rows in all_indices.')
-
-    print_verbose('done!\n')
+    # ----- Load FAISS index -----
+    faiss_index = FaissIndex.load(params['faiss_index_path'], params['indices_path'])
 
     # ----- Drop already existing data from df -----
     print_verbose('dropping rows already encoded in the index ...')
 
-    _, intersec_locs, _ = np.intersect1d(df.index, all_indices, return_indices=True)
+    _, intersec_locs, _ = np.intersect1d(df.index, faiss_index.indices, return_indices=True)
     keep_mask = np.ones((len(df),)).astype(bool)
     keep_mask[intersec_locs] = False
 
@@ -119,15 +112,6 @@ if __name__ == '__main__':
         raise Exception('no new row to be encoded and stored.')
 
     df = df.iloc[keep_mask]
-
-    print_verbose('done!\n')
-
-    # ----- Load faiss index -----
-    print_verbose('loading faiss index ...')
-
-    faiss_index = faiss.read_index(params['faiss_index_path'])
-
-    print_verbose(f'\tfound {faiss_index.ntotal} rows in faiss index.')
 
     print_verbose('done!\n')
 
@@ -173,26 +157,11 @@ if __name__ == '__main__':
         if chunk_rng[-1] == chunk_size - 1 or rng[-1] == len(df) - 1:
             i_chunk = iloc // chunk_size  # Starts from 0
 
-            # Add to the index
-            print_verbose('adding to faiss index ...')
-            faiss_index.add(embeds[:chunk_cnt])
-            print_verbose('done!\n')
+            # Update the index
+            faiss_index.update(embeds[:chunk_cnt], indices[:chunk_cnt])
 
             # Save the index
-            print_verbose('saving faiss index ...')
-            faiss.write_index(faiss_index, params['faiss_index_path'])
-            print_verbose('done!\n')
-
-            # Update and save the indices
-            print_verbose('updating and saving indices ...')
-
-            all_indices = np.append(all_indices, indices[:chunk_cnt])
-
-            with open(params['indices_path'], 'wb') as f:
-                # noinspection PyTypeChecker
-                np.save(f, all_indices)
-
-            print_verbose('done!\n')
+            faiss_index.save(params['faiss_index_path'], params['indices_path'])
 
             # Reset the params
             chunk_cnt = 0

@@ -8,6 +8,7 @@ import time
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
+from core.faiss_index import FaissIndex
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import gdrive_utils as gdu
@@ -52,18 +53,8 @@ if __name__ == '__main__':
     cred = gdu.authenticate(params['credential_path'])
     gdu.build_service(cred)
 
-    # ----- Load indices already added to index -----
-    # Load indices
-    with open(params['indices_path'], 'rb') as f:
-        # noinspection PyTypeChecker
-        all_indices = np.load(f)
-
-    # ----- Load the index -----
-    print_verbose('loading the index ...')
-
-    faiss_index = faiss.read_index(params['faiss_index_path'])
-
-    print_verbose('done!')
+    # ----- Load FAISS index -----
+    faiss_index = FaissIndex.load(params['faiss_index_path'], params['indices_path'])
 
     # ----- Get the list of indices and embeddings at GDrive -----
     indfileid2name = gdu.get_file_ids(configs.GDriveConfig.IND_FOLDER_ID)
@@ -97,7 +88,7 @@ if __name__ == '__main__':
         # Check if any exists in current indices
         print_verbose('checking for duplicates in the new indices ...')
 
-        _, intersec_locs, _ = np.intersect1d(new_indices, all_indices, return_indices=True)
+        _, intersec_locs, _ = np.intersect1d(new_indices, faiss_index.indices, return_indices=True)
         keep_mask = np.ones(new_indices.shape).astype(bool)
         keep_mask[intersec_locs] = False
 
@@ -136,23 +127,11 @@ if __name__ == '__main__':
 
             print_verbose('done!')
 
-        # Add to the index
-        print_verbose('adding to the index ...')
-        faiss_index.add(new_embeddings[keep_mask])
-        print_verbose('done!')
+        # Update the index
+        faiss_index.update(new_embeddings[keep_mask], new_indices[keep_mask])
 
         # Save the index
-        print_verbose('saving the index ...')
-        faiss.write_index(faiss_index, params['faiss_index_path'])
-        print_verbose('done!')
-
-        # Update the indices
-        all_indices = np.append(all_indices, new_indices[keep_mask])
-
-        # Save the indices
-        with open(params['indices_path'], 'wb') as f:
-            # noinspection PyTypeChecker
-            np.save(f, all_indices)
+        faiss_index.save(params['faiss_index_path'], params['indices_path'])
 
         # Log
         dt = time.time() - t0
