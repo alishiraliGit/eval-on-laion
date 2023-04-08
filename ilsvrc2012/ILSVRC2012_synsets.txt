@@ -448,7 +448,6 @@ n04090263: rifle
 n04008634: projectile, missile
 n03085013: computer keyboard, keypad
 n04505470: typewriter keyboard
-n03126707: crane
 n03666591: lighter, light, igniter, ignitor
 n02666196: abacus
 n02977058: cash machine, cash dispenser, automated teller machine, automatic teller machine, automated teller, automatic teller, ATM

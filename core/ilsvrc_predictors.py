@@ -2,6 +2,7 @@ from transformers import ViTImageProcessor, ViTForImageClassification, \
     ResNetForImageClassification, \
     BeitImageProcessor, BeitForImageClassification, \
     ConvNextImageProcessor, ConvNextForImageClassification
+from utils import pytorch_utils as ptu
 
 
 class ILSVRCPredictorType:
@@ -15,28 +16,28 @@ def select_ilsvrc_predictors(types):
         types = [types]
 
     model_names = []
-    processors = []
-    models = []
+    processors = {}
+    models = {}
     for t in types:
         if t == ILSVRCPredictorType.IMAGENET_1K:
             model_names.extend(model_names_1k)
-            processors.extend(processors_1k)
-            models.extend(models_1k)
+            processors.update(processors_1k)
+            models.update(models_1k)
         elif t == ILSVRCPredictorType.IMAGENET_PT21k_FT1K:
             model_names.extend(model_names_pt21k_ft1k)
-            processors.extend(processors_pt21k_ft1k)
-            models.extend(models_pt21k_ft1k)
+            processors.update(processors_pt21k_ft1k)
+            models.update(models_pt21k_ft1k)
         elif t == ILSVRCPredictorType.IMAGENET_21K:
             model_names.extend(model_names_21k)
-            processors.extend(processors_21k)
-            models.extend(models_21k)
+            processors.update(processors_21k)
+            models.update(models_21k)
         else:
-            raise Exception(f"Cannot find the model specified: {t}")
+            raise Exception(f'Cannot find the model specified: {t}')
 
     # Init.
-    # TODO: Move to ptu.device
-    processors = [processor() for processor in processors]
-    models = [model() for model in models]
+    for model_name in model_names:
+        processors[model_name] = processors[model_name]()
+        models[model_name] = models[model_name]().to(ptu.device)
 
     return model_names, processors, models
 

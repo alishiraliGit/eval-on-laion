@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
 import utils.laion_utils as lt
-from retrieve import download_and_save_image
+from core.retrieve_image import download_and_save_image
 
 
 def download_and_save_image_wrapper(args):
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     # ----- Load data and maps -----
     # Load LAION sampled
     subset_file_name = \
-        configs.LAIONConfig.SAMPLED_LABELED_PREFIX \
+        configs.LAIONConfig.SUBSET_PREFIX \
         + lt.get_laion_subset_file_name(0, settings['laion_until_part'])
 
     df = pd.read_parquet(os.path.join(settings['laion_path'], subset_file_name))

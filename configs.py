@@ -18,21 +18,22 @@ class AutoFaissConfig:
     CURRENT_MEMORY = '8GB'
 
 
-class ImageNetModelsConfig:
+class ILSVRCPredictorsConfig:
     BATCH_SIZE = 64
 
 
 class LAIONConfig:
     URL_BASE = 'https://deploy.laion.ai/8f83b608504d46bb81708ec86e912220/dataset/'
     NUM_PARTS = 32
+    SAFE_TAG = 'UNLIKELY'
     INDEX_SHIFT_PER_PART = 100000000
     LABELED_PREFIX = 'labeled_'
-    SAMPLED_LABELED_PREFIX = 'sampled_labeled_'
-    SAFE_TAG = 'UNLIKELY'
+    SUBSET_PREFIX = 'subset_'
+    SUBSET_QUERIED_PREFIX = 'subset_queried_'
 
 
 class LAIONSamplingConfig:
-    UNIFORM_SAMPLES = 1000  # 200
+    UNIFORM_SAMPLES = 1000
     SIMILARITY_BINS_RANGE = (0.3, 0.5)
     SIMILARITY_BINS_DELTA_P = 0.2
     SAMPLES_PER_SIMILARITY_BIN = 50

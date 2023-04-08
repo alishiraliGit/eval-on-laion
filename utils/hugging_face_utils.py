@@ -1,39 +1,41 @@
 import torch
 
 from utils import pytorch_utils as ptu
+from utils.logging_utils import print_verbose
 
 
-def get_label2wnids_map(model, id_lemmas_df, verbose=True):
-    label2wnids = {}
+def get_label2wnid_map(model, id_lemmas_df):
+    label2wnid = {}
     for label, lemmas in model.config.id2label.items():
         lemmas = lemmas.replace('_', ' ')
         wnids = id_lemmas_df.loc[id_lemmas_df['lemmas'] == lemmas, 'id'].values
+        assert len(wnids) <= 1
         if len(wnids) == 0:
-            if verbose:
-                print('Cannot match label %d (%s).' % (label, lemmas))
             continue
-        label2wnids[label] = wnids
+        label2wnid[label] = wnids[0]
 
-    return label2wnids
+    print_verbose(f'\tmatched {len(label2wnid)} labels to a wnid.')
+
+    return label2wnid
 
 
-def predict(processor, model, label2wnids, images):
+def predict(processor, model, label2wnid, images, k=5):
     inputs = processor(images=images, return_tensors='pt')
 
     inputs.to(ptu.device)
 
-    include_labels = list(label2wnids.keys())
+    include_labels = list(label2wnid.keys())
 
     with torch.no_grad():
         outputs = model(**inputs)
 
-        top5s = outputs.logits[:, include_labels].argsort(dim=1, descending=True)[:, :5]
+        topks = outputs.logits[:, include_labels].argsort(dim=1, descending=True)[:, :k]
+
+        topks = ptu.to_numpy(topks)
 
         wnids_pr = []
-        for top5 in top5s:
-            wnids_pr_i = []
-            for label_pr in top5:
-                wnids_pr_i.extend(label2wnids[include_labels[label_pr.numpy().item()]])
+        for topk in topks:
+            wnids_pr_i = [label2wnid[include_labels[label_pr.item()]] for label_pr in topk]
 
             wnids_pr.append(wnids_pr_i)
 

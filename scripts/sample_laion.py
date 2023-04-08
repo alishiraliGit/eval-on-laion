@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     # Save sampled LAION dataframe
     subset_file_name = \
-        configs.LAIONConfig.SAMPLED_LABELED_PREFIX \
+        configs.LAIONConfig.SUBSET_PREFIX \
         + laionu.get_laion_subset_file_name(min(found_parts), max(found_parts))
 
     sampled_df.to_parquet(os.path.join(settings['laion_path'], subset_file_name), index=True)

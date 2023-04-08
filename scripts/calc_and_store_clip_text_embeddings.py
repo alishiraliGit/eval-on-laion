@@ -21,7 +21,7 @@ def load_data(laion_path, n_sample, last_idx, self_destruct):
     # Load as much as required to obtain n_sample
     part_dfs = []
     total_samples = 0
-    laion_part = laionu.get_part_from_mapped_index(last_idx + 1)
+    laion_part, _ = laionu.imap_index(last_idx + 1)
     start_storing = False
     while laion_part < configs.LAIONConfig.NUM_PARTS:
         # Download if required

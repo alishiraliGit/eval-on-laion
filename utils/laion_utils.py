@@ -2,8 +2,10 @@ import os
 import string
 import urllib.request
 import numpy as np
+import pandas as pd
 
 import configs
+from utils.logging_utils import print_verbose
 
 
 def get_laion_part_file_name(part):
@@ -26,12 +28,46 @@ def map_index(idx, part):
     return idx + part*configs.LAIONConfig.INDEX_SHIFT_PER_PART
 
 
-def get_part_from_mapped_index(idx):
-    return idx // configs.LAIONConfig.INDEX_SHIFT_PER_PART
+def imap_index(idx):
+    part = idx // configs.LAIONConfig.INDEX_SHIFT_PER_PART
+    original_index = idx % configs.LAIONConfig.INDEX_SHIFT_PER_PART
+
+    return part, original_index
 
 
 def rename_index(df, part):
     return df.rename(mapper=lambda idx: map_index(idx, part))
+
+
+def load_data_part(laion_path, laion_part, self_destruct):
+    print_verbose(f'loading laion part {laion_part} ...')
+
+    # Download if required
+    laion_file_path = os.path.join(laion_path, get_laion_part_file_name(laion_part))
+    if not os.path.exists(laion_file_path):
+        print_verbose(f'\tdownloading laion part {laion_part} ...')
+
+        download_laion_part(part=laion_part, laion_path=laion_path)
+
+        print_verbose('\tdownloaded!')
+
+    # Load LAION part
+    part_df = pd.read_parquet(laion_file_path)
+
+    # Self-destruct
+    if self_destruct:
+        print_verbose(f'\tremoving laion part {laion_part} from the disk ...')
+
+        os.remove(laion_file_path)
+
+        print_verbose('\tremoved!')
+
+    # Reindex
+    part_df = rename_index(part_df, laion_part)
+
+    print_verbose('done!\n')
+
+    return part_df
 
 
 translation = str.maketrans(string.punctuation, ' ' * len(string.punctuation))
