@@ -27,6 +27,9 @@ if __name__ == '__main__':
                                                                                  'ilsvrc_labels',
                                                                                  'wnid2laionindices(query*).pkl'))
 
+    # Method
+    parser.add_argument('--queried', action='store_true')
+
     # Logging
     parser.add_argument('--verbose', type=bool, default=True)
 
@@ -97,8 +100,8 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    subset_file_name = configs.LAIONConfig.SUBSET_QUERIED_PREFIX \
-        + laionu.get_laion_subset_file_name(0, latest_part)
+    prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
+    subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     if os.path.exists(subset_file_path) and params['safe']:

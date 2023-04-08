@@ -30,10 +30,10 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
 
     parser.add_argument('--indices_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices_60M.npy'))
+                        default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices.npy'))
 
     parser.add_argument('--faiss_index_path', type=str,
-                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn_60M.index'))
+                        default=os.path.join('laion400m', 'processed', 'faiss_index', 'knn.index'))
 
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
 

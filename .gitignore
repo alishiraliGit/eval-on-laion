@@ -19,3 +19,5 @@ credentials
 clip_text_embeddings_downloaded
 clip_text_indices_downloaded
 misc
+ilsvrc_labels
+ilsvrc_predictions
