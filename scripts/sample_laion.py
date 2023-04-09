@@ -1,128 +1,80 @@
 import sys
 import os
-import pandas as pd
+import argparse
 import pickle
+import glob
+
 from tqdm import tqdm
-import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
 import configs
-import utils.laion_utils as laionu
+from utils import pytorch_utils as ptu
+from utils import logging_utils as logu
+from utils.logging_utils import print_verbose
 
 
 if __name__ == '__main__':
-    # ----- Settings -----
-    settings = dict()
+    # ----- Get arguments from input -----
+    parser = argparse.ArgumentParser()
 
     # Path
-    settings['laion_path'] = os.path.join('..', 'laion400m')
-    settings['map_path'] = os.path.join(settings['laion_path'], 'processed')
+    parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
 
-    # ----- Load and merge available labeled parts -----
-    part_dfs = []
-    wnid2laionindices = {}
-    found_parts = []
-    for part in tqdm(range(configs.LAIONConfig.NUM_PARTS), desc='loading labeled data and maps'):
-        laion_part_file_path = os.path.join(
-            settings['laion_path'],
-            configs.LAIONConfig.LABELED_PREFIX + laionu.get_laion_part_file_name(part)
-        )
+    parser.add_argument('--load_file_name', type=str, default='lemma2laionindices(substring_matched*).pkl')
 
-        if not os.path.exists(laion_part_file_path):
-            continue
+    parser.add_argument('--save_file_name', type=str, default='lemma2uniformlaionindices(substring_matched).pkl')
 
-        found_parts.append(part)
+    # Logging
+    parser.add_argument('--no_verbose', dest='verbose', action='store_false')
 
-        # Load labeled LAION part
-        part_df = pd.read_parquet(laion_part_file_path)
+    # Overwrite?
+    parser.add_argument('--no_safe', dest='safe', action='store_false')
 
-        # Reindex
-        part_dfs.append(laionu.rename_index(part_df, part))
+    # Convert to dictionary
+    params = vars(parser.parse_args())
 
-        # Load wnid2laion map
-        map_file_name = f'ILSVRC2012_wnid2laionindices(part{part}).pkl'
-        with open(os.path.join(settings['map_path'], map_file_name), 'rb') as f:
-            wnid2laionpartindices = pickle.load(f)
+    # ----- Init. -----
+    logu.verbose = params['verbose']
 
-        # Reindex
-        for wnid, laionpartindices in wnid2laionpartindices.items():
-            if wnid not in wnid2laionindices:
-                wnid2laionindices[wnid] = []
+    print_verbose('initializing ...')
 
-            wnid2laionindices[wnid].extend([laionu.map_index(idx, part) for idx in laionpartindices])
+    # Env
+    ptu.init_gpu(use_gpu=False)
 
-    # Concat part dfs
-    df = pd.concat(part_dfs, axis=0)
+    # Safety
+    open_type = 'xb' if params['safe'] else 'wb'
 
-    # Clean the memory
-    del wnid2laionpartindices
-    del part_dfs, part_df
+    print_verbose('done!\n')
 
-    # ----- Remove NSFW -----
-    wnid2safelaionindices = {}
-    for wnid, laionindices in tqdm(wnid2laionindices.items(), desc='removing NSFW'):
-        wnid2safelaionindices[wnid] = \
-            [idx for idx in laionindices if df.loc[idx, 'NSFW'] == configs.LAIONConfig.SAFE_TAG]
+    # ----- Load and merges labels -----
+    labels_paths = glob.glob(os.path.join(params['labels_path'], params['load_file_name']))
 
-    wnid2laionindices = wnid2safelaionindices
-    df = df.loc[df.loc[:, 'NSFW'] == configs.LAIONConfig.SAFE_TAG]
+    print_verbose(f'found {len(labels_paths)} files.\n')
+
+    key2laionindices = {}
+    for path in tqdm(labels_paths, desc='loading and merging labels'):
+        # Load
+        with open(path, 'rb') as f:
+            key2laionindices = pickle.load(f)
+
+        # Merge
+        for key, laionindices in key2laionindices.items():
+            if key not in laionindices:
+                key2laionindices[key] = laionindices
+            else:
+                key2laionindices[key].extend(laionindices)
 
     # ----- Sample -----
     # Uniform samples
-    wnid2uniformlaionindices = {}
-    for wnid, laionindices in tqdm(wnid2laionindices.items(), desc='uniform sampling'):
-        wnid2uniformlaionindices[wnid] = laionindices[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
-
-    # Samples from different ranges of CLIP similarity
-    sim_bins = laionu.icdf_bins(df)
-    wnid2icdflaionindices = {}
-    for wnid, laionindices in tqdm(wnid2laionindices.items(), desc='icdf sampling'):
-        wnid2icdflaionindices[wnid] = []
-
-        laionindices = np.array(laionindices)
-        sims = np.array(df.loc[laionindices, 'similarity'].tolist())
-
-        for i_b in range(len(sim_bins) - 1):
-            lb = sim_bins[i_b]
-            rb = sim_bins[i_b + 1]
-            bin_indices = laionindices[np.logical_and(sims >= lb, sims < rb)]
-            wnid2icdflaionindices[wnid].extend(bin_indices[:configs.LAIONSamplingConfig.SAMPLES_PER_SIMILARITY_BIN])
-
-    # Union samples
-    wnid2sampledlaionindices = {}
-    for wnid in wnid2laionindices:
-        wnid2sampledlaionindices[wnid] = list(set(wnid2uniformlaionindices[wnid] + wnid2icdflaionindices[wnid]))
-
-    # Select only sampled data from LAION
-    all_laionindices = []
-    for _, sampledlaionindices in wnid2sampledlaionindices.items():
-        all_laionindices.extend(sampledlaionindices)
-
-    all_laionindices = sorted(set(all_laionindices))
-
-    sampled_df = df.loc[all_laionindices]
+    key2uniformlaionindices = {}
+    for key, laionindices in tqdm(key2laionindices.items(), desc='uniform sampling'):
+        key2uniformlaionindices[key] = laionindices[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
 
     # ----- Save -----
-    print('saving ...')
-    # Save maps
-    uniform_map_file_name = f'ILSVRC2012_wnid2uniformlaionindices.pkl'
-    with open(os.path.join(settings['map_path'], uniform_map_file_name), 'wb') as f:
-        pickle.dump(wnid2uniformlaionindices, f)
+    print_verbose('saving ...')
 
-    icdf_map_file_name = f'ILSVRC2012_wnid2icdflaionindices.pkl'
-    with open(os.path.join(settings['map_path'], icdf_map_file_name), 'wb') as f:
-        pickle.dump(wnid2icdflaionindices, f)
+    with open(os.path.join(params['labels_path'], params['save_file_name']), open_type) as f:
+        pickle.dump(key2uniformlaionindices, f)
 
-    sampled_map_file_name = f'ILSVRC2012_wnid2sampledlaionindices.pkl'
-    with open(os.path.join(settings['map_path'], sampled_map_file_name), 'wb') as f:
-        pickle.dump(wnid2sampledlaionindices, f)
-
-    # Save sampled LAION dataframe
-    subset_file_name = \
-        configs.LAIONConfig.SUBSET_PREFIX \
-        + laionu.get_laion_subset_file_name(min(found_parts), max(found_parts))
-
-    sampled_df.to_parquet(os.path.join(settings['laion_path'], subset_file_name), index=True)
-
-    print('done!')
+    print_verbose('done!\n')

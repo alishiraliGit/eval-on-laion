@@ -80,30 +80,3 @@ def transform_lemma(lemma):
 
 def transform_text(txt):
     return ' ' + txt.translate(translation) + ' '
-
-
-def icdf_bins(df):
-    # Find CDF
-    sim_rng = configs.LAIONSamplingConfig.SIMILARITY_BINS_RANGE
-    xs = np.linspace(sim_rng[0], sim_rng[1], 1000)
-    cdfs = np.zeros(xs.shape)
-    for i_x, x in enumerate(xs):
-        cdfs[i_x] = np.mean(df['similarity'] <= x)
-
-    # Find ICDF
-    dp = configs.LAIONSamplingConfig.SIMILARITY_BINS_DELTA_P
-    i_x = 0
-    cdf_0 = cdfs[0]
-    icdfs = [xs[0]]
-    while True:
-        if i_x == len(xs):
-            icdfs.append(xs[i_x - 1])
-            break
-
-        if cdfs[i_x] - cdf_0 >= dp:
-            icdfs.append(xs[i_x])
-            cdf_0 = cdfs[i_x]
-
-        i_x += 1
-
-    return np.array(icdfs)
