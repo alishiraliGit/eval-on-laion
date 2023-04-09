@@ -86,6 +86,8 @@ def update_pred_pb(pred_pb, pred_results):
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
+
     # ----- Get arguments from input -----
     parser = argparse.ArgumentParser()
 
