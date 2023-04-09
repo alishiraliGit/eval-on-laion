@@ -107,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_gpu', action='store_true')
 
     # Logging
-    parser.add_argument('--verbose', type=bool, default=True)
+    parser.add_argument('--no_verbose', dest='verbose', action='store_false')
 
     # Destruction
     parser.add_argument('--self_destruct', action='store_true')

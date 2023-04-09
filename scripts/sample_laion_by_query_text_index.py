@@ -38,10 +38,10 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
 
     # Logging
-    parser.add_argument('--verbose', type=bool, default=True)
+    parser.add_argument('--no_verbose', dest='verbose', action='store_false')
 
     # Overwrite?
-    parser.add_argument('--safe', type=bool, default=True)
+    parser.add_argument('--no_safe', dest='safe', action='store_false')
 
     # Convert to dictionary
     params = vars(parser.parse_args())
@@ -117,4 +117,3 @@ if __name__ == '__main__':
         sim_file_name = f'wnid2cossims(query_{query_types[i_q]}).pkl'
         with open(os.path.join(params['save_path'], sim_file_name), open_type) as f:
             pickle.dump(wnid2cossims, f)
-

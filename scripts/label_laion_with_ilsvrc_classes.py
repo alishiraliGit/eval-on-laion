@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed'))
 
     # Logging
-    parser.add_argument('--verbose', type=bool, default=True)
+    parser.add_argument('--no_verbose', dest='verbose', action='store_false')
 
     # Destruction
     parser.add_argument('--self_destruct', action='store_true')
