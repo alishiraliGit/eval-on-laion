@@ -18,6 +18,12 @@ class AutoFaissConfig:
     CURRENT_MEMORY = '8GB'
 
 
+class ILSVRCConfigs:
+    LEMMAS_SEP = ', '
+    WNID_COL = 'id'
+    LEMMAS_COL = 'lemmas'
+
+
 class ILSVRCPredictorsConfig:
     BATCH_SIZE = 64
 
@@ -27,6 +33,7 @@ class LAIONConfig:
     NUM_PARTS = 32
     SAFE_TAG = 'UNLIKELY'
     INDEX_SHIFT_PER_PART = 100000000
+    TEXT_COL = 'TEXT'
     LABELED_PREFIX = 'labeled_'
     SUBSET_PREFIX = 'subset_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'

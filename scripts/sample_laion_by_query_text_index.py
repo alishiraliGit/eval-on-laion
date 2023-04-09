@@ -5,7 +5,6 @@ import pickle
 # FAISS will crash if you don't import it here!
 import faiss
 
-
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
 
