@@ -51,6 +51,7 @@ if __name__ == '__main__':
     labels_paths = glob.glob(os.path.join(params['labels_path'], params['load_file_name']))
 
     print_verbose(f'found {len(labels_paths)} files.\n')
+    print_verbose('\n'.join(labels_paths) + '\n')
 
     key2laionindices = {}
     for path in tqdm(labels_paths, desc='loading and merging labels'):

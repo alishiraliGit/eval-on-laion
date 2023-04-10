@@ -23,9 +23,9 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
 
-    parser.add_argument('--sampled_indices_path', type=str, default=os.path.join('laion400m', 'processed',
-                                                                                 'ilsvrc_labels',
-                                                                                 'wnid2laionindices(query*).pkl'))
+    parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
+
+    parser.add_argument('--load_file_name', type=str, default='*2uniformlaionindices(substring_matched).pkl')
 
     # Method
     parser.add_argument('--queried', action='store_true')
@@ -56,18 +56,19 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Load sampled indices -----
-    sampled_indices_paths = glob.glob(params['sampled_indices_path'])
+    file_paths = glob.glob(os.path.join(params['labels_path'], params['load_file_name']))
 
-    print_verbose(f'found {len(sampled_indices_paths)} wnid2laion indices files.\n')
+    print_verbose(f'found {len(file_paths)} key2laion indices files.\n')
+    print_verbose('\n'.join(file_paths) + '\n')
 
     part2laionindices = {part: set() for part in range(configs.LAIONConfig.NUM_PARTS)}
-    for path in tqdm(sampled_indices_paths, desc='loading and merging sampled indices'):
+    for path in tqdm(file_paths, desc='loading and merging sampled indices'):
         # Load
         with open(path, 'rb') as f:
-            wnid2laionindices = pickle.load(f)
+            key2laionindices = pickle.load(f)
 
         # Add to corresponding part
-        for _, laionindices in wnid2laionindices.items():
+        for _, laionindices in key2laionindices.items():
             for laionindex in laionindices:
                 part, _ = laionu.imap_index(laionindex)
 
