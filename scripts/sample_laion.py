@@ -4,6 +4,7 @@ import argparse
 import pickle
 import glob
 
+import numpy as np
 from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
@@ -12,6 +13,14 @@ import configs
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
+
+
+def sample_uniform(x):
+    if len(x) <= configs.LAIONSamplingConfig.UNIFORM_SAMPLES:
+        return sorted(x)
+    else:
+        np.random.seed(42)  # Fix the seed for reproducibility
+        return sorted(np.random.choice(x, size=configs.LAIONSamplingConfig.UNIFORM_SAMPLES, replace=False).tolist())
 
 
 if __name__ == '__main__':
@@ -57,11 +66,11 @@ if __name__ == '__main__':
     for path in tqdm(labels_paths, desc='loading and merging labels'):
         # Load
         with open(path, 'rb') as f:
-            key2laionindices = pickle.load(f)
+            key2laionindices_i = pickle.load(f)
 
         # Merge
-        for key, laionindices in key2laionindices.items():
-            if key not in laionindices:
+        for key, laionindices in key2laionindices_i.items():
+            if key not in key2laionindices:
                 key2laionindices[key] = laionindices
             else:
                 key2laionindices[key].extend(laionindices)
@@ -70,7 +79,7 @@ if __name__ == '__main__':
     # Uniform samples
     key2uniformlaionindices = {}
     for key, laionindices in tqdm(key2laionindices.items(), desc='uniform sampling'):
-        key2uniformlaionindices[key] = sorted(laionindices)[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
+        key2uniformlaionindices[key] = sample_uniform(laionindices)
 
     # ----- Save -----
     print_verbose('saving ...')
