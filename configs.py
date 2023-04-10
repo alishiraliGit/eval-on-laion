@@ -37,6 +37,7 @@ class LAIONConfig:
     LABELED_PREFIX = 'labeled_'
     SUBSET_PREFIX = 'subset_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
+    SUBSET_QUERIED_PREDICTED_PREFIX = 'subset_queried_predicted_'
 
 
 class LAIONSamplingConfig:

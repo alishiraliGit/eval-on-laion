@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # laion_parts = range(configs.LAIONConfig.NUM_PARTS)
 
     logs = []
-    for laion_part in range(16):
+    for laion_part in range(16, 32):
         command = \
             'python scripts/label_laion.py' + '\n' + \
             '--laion_part %d' % laion_part + '\n' + \
