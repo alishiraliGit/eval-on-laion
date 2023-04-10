@@ -10,10 +10,10 @@ import configs
 if __name__ == '__main__':
     n_process = 2
 
-    laion_parts = range(configs.LAIONConfig.NUM_PARTS)
+    # laion_parts = range(configs.LAIONConfig.NUM_PARTS)
 
     logs = []
-    for laion_part in laion_parts:
+    for laion_part in range(16):
         command = \
             'python scripts/label_laion.py' + '\n' + \
             '--laion_part %d' % laion_part + '\n' + \
