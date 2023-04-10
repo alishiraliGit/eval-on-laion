@@ -41,7 +41,7 @@ class LAIONConfig:
 
 
 class LAIONSamplingConfig:
-    UNIFORM_SAMPLES = 500
+    UNIFORM_SAMPLES = 250  # 500
     CLIP_SIMILARITY_RANGE = (0.3, 0.5)  # Not yet used
 
 
