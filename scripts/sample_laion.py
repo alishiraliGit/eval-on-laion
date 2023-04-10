@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # Uniform samples
     key2uniformlaionindices = {}
     for key, laionindices in tqdm(key2laionindices.items(), desc='uniform sampling'):
-        key2uniformlaionindices[key] = laionindices[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
+        key2uniformlaionindices[key] = sorted(laionindices)[:configs.LAIONSamplingConfig.UNIFORM_SAMPLES]
 
     # ----- Save -----
     print_verbose('saving ...')
