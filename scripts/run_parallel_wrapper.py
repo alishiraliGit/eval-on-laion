@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 import configs
 
 if __name__ == '__main__':
-    n_process = 2
+    n_process = 3
 
     # laion_parts = range(configs.LAIONConfig.NUM_PARTS)
 
