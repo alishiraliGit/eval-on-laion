@@ -22,6 +22,7 @@ class ILSVRCConfigs:
     LEMMAS_SEP = ', '
     WNID_COL = 'id'
     LEMMAS_COL = 'lemmas'
+    NUM_WNID = 1000
 
 
 class ILSVRCPredictorsConfig:
