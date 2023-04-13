@@ -1,4 +1,6 @@
 import os
+import pickle
+
 from autofaiss import build_index
 import faiss
 import numpy as np
@@ -40,8 +42,7 @@ class FaissIndex:
 
         # Save the indices
         with open(indices_path, 'wb') as f:
-            # noinspection PyTypeChecker
-            np.save(f, indices_path)
+            pickle.dump(self.indices, f)
 
         print_verbose('done!\n')
 
@@ -51,8 +52,8 @@ class FaissIndex:
         print_verbose('loading indices ...')
 
         with open(indices_path, 'rb') as f:
-            # noinspection PyTypeChecker
-            all_indices = np.load(f)
+            all_indices = pickle.load(f)
+
         print_verbose(f'\tfound {len(all_indices)} rows in all_indices.')
 
         print_verbose('done!\n')
