@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
-    parser.add_argument('--save_freq', type=int, default=20)
+    parser.add_argument('--save_freq', type=int, default=1000)
 
     # Destruction
     parser.add_argument('--self_destruct', action='store_true')
@@ -140,6 +140,7 @@ if __name__ == '__main__':
     download_ready_results = []
     errors = []
 
+    i_batch = 0
     for i_res, down_res in tqdm(enumerate(download_results), desc='download and calc. embeddings', total=len(df)):
         # Catch the errors in downloading
         index, image_content, error = down_res
@@ -169,20 +170,13 @@ if __name__ == '__main__':
             locs_i = np.searchsorted(top_sims[i_v], sims_vb[i_v])
 
             # Insert
-            top_sims[i_v] = np.insert(top_sims[i_v], locs_i, sims_vb[i_v])
-            top_indices[i_v] = np.insert(top_indices[i_v], locs_i, indices_batch)
-
-            # Cut
-            top_sims = top_sims[:params['top_k']]
-            top_indices = top_indices[:params['top_k']]
-
-        # Empty current batch
-        download_ready_results = []
+            top_sims[i_v] = np.insert(top_sims[i_v], locs_i, sims_vb[i_v])[-params['top_k']:]
+            top_indices[i_v] = np.insert(top_indices[i_v], locs_i, indices_batch)[-params['top_k']:]
 
         # Save
-        print_verbose('saving ....')
+        if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df) - 1):
+            print_verbose('saving ....')
 
-        if ((i_res + 1) % params['save_freq'] == 0) or i_res == (len(df) - 1):
             top_indices_df = pd.DataFrame(
                 top_indices,
                 index=range(1, configs.ILSVRCConfigs.NUM_VAL + 1),
@@ -196,9 +190,14 @@ if __name__ == '__main__':
 
             top_df = pd.concat((top_indices_df, top_sims_df), axis=1)
 
-            top_df.to_csv(os.path.join(params['save_path'], f'top{params["top_k"]}_val_most_similars.csv'), index=True)
+            top_df.to_csv(os.path.join(params['save_path'], f'top{params["top_k"]}_val_most_similars.csv'),
+                          index=True, float_format='%.4f')
 
-        print_verbose('done!\n')
+            print_verbose('done!\n')
+
+        # Empty current batch
+        download_ready_results = []
+        i_batch += 1
 
     # ----- Close progress bars and processes -----
     pool_download.close()
