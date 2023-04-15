@@ -1,5 +1,6 @@
 import sys
 import os
+import multiprocessing
 import argparse
 import json
 from tqdm import tqdm
@@ -13,6 +14,30 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 
 
+def init_client(clip_retrieval_index_name, top_k):
+    return ClipClient(
+        url=configs.CLIPRetrievalConfig.BACKEND_URL,
+        indice_name=clip_retrieval_index_name,
+        aesthetic_score=0,
+        aesthetic_weight=0,
+        modality=Modality.IMAGE,
+        num_images=top_k,
+        deduplicate=True,
+        use_safety_model=True,
+        use_violence_detector=True
+    )
+
+
+def init_client_and_retrieve(args):
+    idx, pars = args
+
+    clt = init_client(pars['clip_retrieval_index_name'], pars['top_k'])
+
+    q_results = clt.query(image=os.path.join(pars['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
+
+    return idx, q_results
+
+
 if __name__ == '__main__':
     # ----- Get arguments from input -----
     parser = argparse.ArgumentParser()
@@ -21,6 +46,9 @@ if __name__ == '__main__':
     parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_val'))
 
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'from_clip_retrieval'))
+
+    # Multiprocessing
+    parser.add_argument('--n_process', type=int, default=6)
 
     # CLIP retrieval
     parser.add_argument('--clip_retrieval_index_name', type=str, default='laion_400m',
@@ -44,19 +72,6 @@ if __name__ == '__main__':
 
     os.makedirs(params['save_path'], exist_ok=True)
 
-    # ----- Init. the client -----
-    client = ClipClient(
-        url=configs.CLIPRetrievalConfig.BACKEND_URL,
-        indice_name=params['clip_retrieval_index_name'],
-        aesthetic_score=0,
-        aesthetic_weight=0,
-        modality=Modality.IMAGE,
-        num_images=params['top_k'],
-        deduplicate=True,
-        use_safety_model=True,
-        use_violence_detector=True
-    )
-
     # ----- Load previous results (if any) -----
     results_file_name = f'top{params["top_k"]}_val_most_similars_from_{params["clip_retrieval_index_name"]}.json'
 
@@ -75,17 +90,23 @@ if __name__ == '__main__':
     else:
         all_results = {}
 
+    # ----- Select images -----
+    todo_indices = [index for index in range(1, configs.ILSVRCConfigs.NUM_VAL + 1) if index not in all_results]
+
+    # ----- Init. a pool -----
+    pool = multiprocessing.Pool(params['n_process'])
+
+    # ----- Start the pool -----
+    pool_results = pool.imap(init_client_and_retrieve, [(index, params) for index in todo_indices])
+
     # ----- Retrieve -----
-    for idx in tqdm(range(1, configs.ILSVRCConfigs.NUM_VAL + 1)):
-        if idx in all_results:
-            continue
+    for i_res, result in tqdm(enumerate(pool_results), total=len(todo_indices)):
+        index, query_results = result
 
-        results = client.query(image=os.path.join(params['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
-
-        all_results[idx] = results
+        all_results[index] = query_results
 
         # Save
-        if (idx % params['save_freq'] == 0) or (idx == configs.ILSVRCConfigs.NUM_VAL):
+        if ((i_res + 1) % params['save_freq'] == 0) or ((i_res + 1) == configs.ILSVRCConfigs.NUM_VAL):
             print_verbose('saving ...')
 
             with open(os.path.join(params['save_path'], results_file_name), 'w') as f:
