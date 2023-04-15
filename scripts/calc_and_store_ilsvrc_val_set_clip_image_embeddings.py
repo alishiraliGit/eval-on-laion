@@ -58,7 +58,7 @@ if __name__ == '__main__':
     clip = CLIP()
 
     # ----- Find the data -----
-    image_file_paths = glob.glob(os.path.join(params['images_path'], '*.JPEG'))[:100]
+    image_file_paths = glob.glob(os.path.join(params['images_path'], '*.JPEG'))
     n_image = len(image_file_paths)
 
     # ----- Loop over batches -----
