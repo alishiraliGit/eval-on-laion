@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving embeddings ...')
 
-    with open(os.path.join(params['images_path'], 'val_img_embeddings.pkl'), open_type) as f:
+    with open(os.path.join(params['save_path'], 'val_img_embeddings.pkl'), open_type) as f:
         pickle.dump(embeds, f)
 
     print_verbose('done!\n')
