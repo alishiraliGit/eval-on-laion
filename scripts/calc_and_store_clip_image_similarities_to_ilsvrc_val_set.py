@@ -85,6 +85,9 @@ if __name__ == '__main__':
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
     parser.add_argument('--save_freq', type=int, default=1000)
 
+    # Continue
+    parser.add_argument('--no_continue', dest='continue', action='store_false')
+
     # Destruction
     parser.add_argument('--self_destruct', action='store_true')
 
@@ -127,6 +130,30 @@ if __name__ == '__main__':
     # ----- Load LAION data -----
     df = laionu.load_data_part(params['laion_path'], params['laion_part'], params['self_destruct'])
 
+    # ----- Load most similars (if any) -----
+    top_save_path = os.path.join(params['save_path'], f'top{params["top_k"]}_val_most_similars.csv')
+    top_sims_cols = [f'sim_{t + 1}' for t in range(params['top_k'])]
+    top_indices_cols = [f'index_{t + 1}' for t in range(params['top_k'])]
+
+    if os.path.exists(top_save_path) and params['continue']:
+        print_verbose('loading previous top similars to continue ...')
+
+        top_df = pd.read_csv(top_save_path)
+
+        assert top_df.shape[0] == n_val
+
+        top_sims = top_df[top_sims_cols].to_numpy()
+        top_indices = top_df[top_indices_cols].to_numpy()
+
+        # Make them lists
+        top_sims = [row.copy() for row in top_sims]
+        top_indices = [row.copy() for row in top_indices]
+
+        print_verbose('done!\n')
+    else:
+        top_sims = [-np.ones((params['top_k'],)) for _ in range(n_val)]
+        top_indices = [-np.ones((params['top_k'],)).astype(int) for _ in range(n_val)]
+
     # ----- Init. parallel download -----
     pool_download = multiprocessing.Pool(params['n_process_download'])
 
@@ -135,8 +162,6 @@ if __name__ == '__main__':
 
     # ----- Collect downloads and calc. embeddings -----
     # Init.
-    top_sims = [-np.ones((params['top_k'],)) for _ in range(n_val)]
-    top_indices = [-np.ones((params['top_k'],)).astype(int) for _ in range(n_val)]
     download_ready_results = []
     errors = []
 
@@ -180,12 +205,12 @@ if __name__ == '__main__':
             top_indices_df = pd.DataFrame(
                 top_indices,
                 index=range(1, configs.ILSVRCConfigs.NUM_VAL + 1),
-                columns=[f'index_{t + 1}' for t in range(params['top_k'])]
+                columns=top_indices_cols
             )
             top_sims_df = pd.DataFrame(
                 top_sims,
                 index=range(1, configs.ILSVRCConfigs.NUM_VAL + 1),
-                columns=[f'sim_{t + 1}' for t in range(params['top_k'])]
+                columns=top_sims_df
             )
 
             top_df = pd.concat((top_indices_df, top_sims_df), axis=1)
