@@ -54,11 +54,18 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Load clip ----
+    # ----- Init. CLIP -----
+    print_verbose('init clip ...')
+
     clip = CLIP()
 
+    print_verbose('done!\n')
+
     # ----- Find the data -----
-    image_file_paths = glob.glob(os.path.join(params['images_path'], '*.JPEG'))
+    image_file_paths = [
+        os.path.join(params['images_path'], 'ILSVRC2012_val_%08d.JPEG' % (idx + 1))
+        for idx in range(configs.ILSVRCConfigs.NUM_VAL)
+    ]
     n_image = len(image_file_paths)
 
     # ----- Loop over batches -----
