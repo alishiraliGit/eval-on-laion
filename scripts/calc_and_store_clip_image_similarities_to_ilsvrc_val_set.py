@@ -136,20 +136,34 @@ if __name__ == '__main__':
     top_indices_cols = [f'index_{t + 1}' for t in range(params['top_k'])]
 
     if os.path.exists(top_save_path) and params['continue']:
+        # Load
         print_verbose('loading previous top similars to continue ...')
 
         top_df = pd.read_csv(top_save_path)
 
         assert top_df.shape[0] == n_val
 
+        print_verbose('done!\n')
+
+        # Drop data already existing
+        print_verbose('trimming data from the last found index ...')
+
+        max_idx = np.max(top_df[top_indices_cols].to_numpy())
+
+        print_verbose(f'\ttrimming from index {max_idx}')
+
+        max_loc = df.index.get_loc(max_idx)
+        df = df.iloc[max_loc + 1:]
+
+        print_verbose('done!\n')
+
+        # Convert to appropriate format
         top_sims = top_df[top_sims_cols].to_numpy()
         top_indices = top_df[top_indices_cols].to_numpy()
 
-        # Make them lists
         top_sims = [row.copy() for row in top_sims]
         top_indices = [row.copy() for row in top_indices]
 
-        print_verbose('done!\n')
     else:
         top_sims = [-np.ones((params['top_k'],)) for _ in range(n_val)]
         top_indices = [-np.ones((params['top_k'],)).astype(int) for _ in range(n_val)]
