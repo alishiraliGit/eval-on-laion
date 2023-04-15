@@ -210,7 +210,7 @@ if __name__ == '__main__':
             top_sims_df = pd.DataFrame(
                 top_sims,
                 index=range(1, configs.ILSVRCConfigs.NUM_VAL + 1),
-                columns=top_sims_df
+                columns=top_sims_cols
             )
 
             top_df = pd.concat((top_indices_df, top_sims_df), axis=1)
