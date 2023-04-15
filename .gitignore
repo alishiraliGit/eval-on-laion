@@ -25,3 +25,5 @@ ilsvrc_similarities
 ILSVRC2012_img_val
 ILSVRC2012_img_val.tar
 val_img_embeddings.pkl
+del
+from_clip_retrieval

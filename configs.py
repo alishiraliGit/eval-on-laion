@@ -57,3 +57,7 @@ class GDriveConfig:
     EMB_FOLDER_ID = '1-s-Drt1IecCgodj7u7bwhEho7ZLY8CPa'
     IND_FOLDER_ID = '1-uuFos6XucFIRsU-7SdPn8uy65FYBFwu'
     CRED_FILE_NAME = 'client_secret_756745105460-2en3aa9elbhsni4k10u8o2utmc0l5mjn.apps.googleusercontent.com.json'
+
+
+class CLIPRetrievalConfig:
+    BACKEND_URL = 'https://knn.laion.ai/knn-service'
