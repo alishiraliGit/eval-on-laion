@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
+from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer, CLIPImageProcessor
 
 import configs
 from utils import pytorch_utils as ptu
@@ -13,6 +13,9 @@ class CLIP:
 
         # Only for obtaining text embeddings
         self.text_processor = CLIPTokenizer.from_pretrained(f'openai/{ver}')
+
+        # Only for obtaining image embeddings
+        self.image_processor = CLIPImageProcessor.from_pretrained(f'openai/{ver}')
 
         self.model.to(ptu.device)
 
@@ -38,5 +41,17 @@ class CLIP:
             text_outputs = self.model.text_model(**inputs)
 
             embeds = self.model.text_projection(text_outputs.pooler_output)
+
+            return ptu.to_numpy(embeds)
+
+    def image_embeds(self, images) -> np.ndarray:
+        inputs = self.image_processor(images, return_tensors='pt')
+
+        inputs.to(ptu.device)
+
+        with torch.no_grad():
+            image_outputs = self.model.vision_model(**inputs)
+
+            embeds = self.model.visual_projection(image_outputs.pooler_output)
 
             return ptu.to_numpy(embeds)

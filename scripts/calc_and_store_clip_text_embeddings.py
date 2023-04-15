@@ -2,6 +2,7 @@ import sys
 import os
 import gc
 import argparse
+import pickle
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
@@ -179,12 +180,10 @@ if __name__ == '__main__':
             i_chunk = (iloc + last_index + 1) // chunk_size  # Starts from 0
 
             with open(os.path.join(params['indices_save_path'], 'indices-%05d.npy' % i_chunk), 'wb') as f:
-                # noinspection PyTypeChecker
-                np.save(f, indices)
+                pickle.dump(indices, f)
 
             with open(os.path.join(params['save_path'], 'embeddings-%05d.npy' % i_chunk), 'wb') as f:
-                # noinspection PyTypeChecker
-                np.save(f, embeds)
+                pickle.dump(embeds, f)
 
             indices *= 0
             embeds *= 0

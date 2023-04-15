@@ -1,3 +1,4 @@
+import pickle
 import sys
 import os
 
@@ -16,9 +17,18 @@ if __name__ == '__main__':
     # Path
     settings['devkit_path'] = os.path.join('ilsvrc2012', 'ILSVRC2012_devkit_t12')
 
+    settings['save_path'] = os.path.join('ilsvrc2012', 'processed')
+
+    settings['safe'] = False
+
     # ----- Init. -----
     meta_path = os.path.join(settings['devkit_path'], 'data', 'meta.mat')
     val_ground_truth_path = os.path.join(settings['devkit_path'], 'data', 'ILSVRC2012_validation_ground_truth.txt')
+
+    os.makedirs(settings['save_path'], exist_ok=True)
+
+    # Safety
+    open_type = 'xb' if settings['safe'] else 'wb'
 
     # ----- Load -----
     meta_mat = loadmat(meta_path)['synsets'][:, 0]
@@ -41,3 +51,17 @@ if __name__ == '__main__':
             wnid2count[wnid] = 0
 
         wnid2count[wnid] += 1
+
+    # ----- Name2wnid -----
+    imagename2wnid = {}
+
+    for idx in labels.index:
+        label = labels.loc[idx, 'label']
+        wnid = label2wnid[label]
+
+        imagename = 'ILSVRC2012_val_%08d.JPEG' % (idx + 1)
+
+        imagename2wnid[imagename] = wnid
+
+    with open(os.path.join(settings['save_path'], 'imagename2wnid.pkl'), open_type) as f:
+        pickle.dump(imagename2wnid, f)
