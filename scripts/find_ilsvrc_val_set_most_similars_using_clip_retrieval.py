@@ -33,7 +33,10 @@ def init_client_and_retrieve(args):
 
     clt = init_client(pars['clip_retrieval_index_name'], pars['top_k'])
 
-    q_results = clt.query(image=os.path.join(pars['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
+    try:
+        q_results = clt.query(image=os.path.join(pars['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
+    except Exception as e:
+        return -1, e
 
     return idx, q_results
 
@@ -103,10 +106,15 @@ if __name__ == '__main__':
     for i_res, result in tqdm(enumerate(pool_results), total=len(todo_indices)):
         index, query_results = result
 
+        # Catch the error
+        if index < 0:
+            print_verbose(f'error caught in fetching the results: \n {str(query_results)}')
+            continue
+
         all_results[index] = query_results
 
         # Save
-        if ((i_res + 1) % params['save_freq'] == 0) or ((i_res + 1) == configs.ILSVRCConfigs.NUM_VAL):
+        if ((i_res + 1) % params['save_freq'] == 0) or ((i_res + 1) == len(todo_indices)):
             print_verbose('saving ...')
 
             with open(os.path.join(params['save_path'], results_file_name), 'w') as f:
