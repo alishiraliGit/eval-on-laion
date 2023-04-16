@@ -63,9 +63,15 @@ if __name__ == '__main__':
 
     # ----- Reformat -----
     wnid2crindices = {}
-    df = pd.DataFrame(
-        {configs.LAIONConfig.URL_COL: [], configs.LAIONConfig.TEXT_COL: [], 'image_to_image_similarity': []}
-    )
+    df_index = []
+    df_dict = {
+        configs.LAIONConfig.URL_COL: [],
+        configs.LAIONConfig.TEXT_COL: [],
+        'image_to_image_similarity': [],
+        'similar_to_image_name': [],
+        'WNID': []
+    }
+
     for image_idx, results in tqdm(cr_results.items()):
         image_name = 'ILSVRC2012_val_%08d.JPEG' % image_idx
         wnid = imagename2wnid[image_name]
@@ -81,11 +87,16 @@ if __name__ == '__main__':
 
             wnid2crindices[wnid].append(cr_idx)
 
-            df.loc[cr_idx, [configs.LAIONConfig.URL_COL, configs.LAIONConfig.TEXT_COL, 'image_to_image_similarity']] = [
-                res[configs.CLIPRetrievalConfig.URL_COL],
-                res[configs.CLIPRetrievalConfig.TEXT_COL],
-                res[configs.CLIPRetrievalConfig.SIMILARITY_COL]
-            ]
+            df_index.append(cr_idx)
+
+            df_dict[configs.LAIONConfig.URL_COL].append(res[configs.CLIPRetrievalConfig.URL_COL])
+            df_dict[configs.LAIONConfig.TEXT_COL].append(res[configs.CLIPRetrievalConfig.TEXT_COL])
+            df_dict['image_to_image_similarity'].append(res[configs.CLIPRetrievalConfig.SIMILARITY_COL])
+            df_dict['similar_to_image_name'].append(image_name)
+            df_dict['WNID'].append(wnid)
+
+    # ----- Create a dataframe -----
+    df = pd.DataFrame(df_dict, index=df_index)
 
     # ----- Save -----
     print_verbose('saving...')
