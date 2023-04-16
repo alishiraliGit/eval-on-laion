@@ -35,15 +35,18 @@ class LAIONConfig:
     NUM_PARTS = 32
     SAFE_TAG = 'UNLIKELY'
     INDEX_SHIFT_PER_PART = 100000000
+    URL_COL = 'URL'
     TEXT_COL = 'TEXT'
+    SIMILARITY_COL = 'similarity'
     LABELED_PREFIX = 'labeled_'
     SUBSET_PREFIX = 'subset_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
     SUBSET_QUERIED_PREDICTED_PREFIX = 'subset_queried_predicted_'
+    SUBSET_CLIP_RETRIEVAL = 'subset_cr_'
 
 
 class LAIONSamplingConfig:
-    UNIFORM_SAMPLES = 250  # 500
+    UNIFORM_SAMPLES = 500
     CLIP_SIMILARITY_RANGE = (0.3, 0.5)  # Not yet used
 
 
@@ -61,3 +64,7 @@ class GDriveConfig:
 
 class CLIPRetrievalConfig:
     BACKEND_URL = 'https://knn.laion.ai/knn-service'
+    URL_COL = 'url'
+    TEXT_COL = 'caption'
+    SIMILARITY_COL = 'similarity'
+    ID_COL = 'id'

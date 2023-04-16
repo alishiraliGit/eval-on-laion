@@ -59,9 +59,9 @@ if __name__ == '__main__':
         label = labels.loc[idx, 'label']
         wnid = label2wnid[label]
 
-        imagename = 'ILSVRC2012_val_%08d.JPEG' % (idx + 1)
+        image_name = 'ILSVRC2012_val_%08d.JPEG' % (idx + 1)
 
-        imagename2wnid[imagename] = wnid
+        imagename2wnid[image_name] = wnid
 
     with open(os.path.join(settings['save_path'], 'imagename2wnid.pkl'), open_type) as f:
         pickle.dump(imagename2wnid, f)
