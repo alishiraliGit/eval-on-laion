@@ -282,6 +282,7 @@ if __name__ == '__main__':
             except Exception as ex:
                 errors.append('\n' + f'In concat. result {i_pred} of model {model_name}, an error happened.')
                 errors.append(str(ex))
+                print(ex)
 
     # ----- Save the successful predictions ------
     print_verbose('saving ....')

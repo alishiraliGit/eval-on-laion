@@ -146,8 +146,11 @@ if __name__ == '__main__':
             continue
 
         # Calc. embeddings
-        indices_batch, similarities_batch, errors_embeds = calc_image_to_text_similarities(download_ready_results, clip)
-        errors.extend(errors_embeds)
+        indices_batch, similarities_batch, errors_batch = calc_image_to_text_similarities(download_ready_results, clip)
+
+        for error in errors_batch:
+            errors.append('\n' + error['cause'])
+            errors.append(str(error['error']))
 
         # Update df
         df.loc[indices_batch, image_to_text_sim_col] = similarities_batch
