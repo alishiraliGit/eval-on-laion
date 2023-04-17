@@ -32,7 +32,7 @@ def setup(ev):
 def download_image_wrapper(args):
     idx, row = args
     try:
-        img_content = download_image_content(row['URL'])
+        img_content = download_image_content(row[configs.LAIONConfig.URL_COL])
         verify_image(img_content)
         return idx, img_content, None
     except Exception as e:
@@ -100,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_predictions'))
 
     # Method
+    parser.add_argument('--queried_clip_retrieval', action='store_true')
     parser.add_argument('--queried', action='store_true')
 
     # Multiprocessing
@@ -160,7 +161,11 @@ if __name__ == '__main__':
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')
 
-    prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
+    if params['queried_clip_retrieval']:
+        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL
+    else:
+        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
+
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
     df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
