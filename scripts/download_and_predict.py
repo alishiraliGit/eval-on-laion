@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name)).iloc[:1000]
+    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
     print_verbose('done!\n')
 
@@ -282,19 +282,18 @@ if __name__ == '__main__':
             except Exception as ex:
                 errors.append('\n' + f'In concat. result {i_pred} of model {model_name}, an error happened.')
                 errors.append(str(ex))
-                print(ex)
 
     # ----- Save the successful predictions ------
     print_verbose('saving ....')
 
     time_str = time.strftime('%d-%m-%Y_%H-%M-%S')
 
-    for model_name in model_names:
-        pred_file_name = prefix + f'{model_name}_predictions_{time_str}.csv'
-        model2pred[model_name].to_csv(os.path.join(params['save_path'], pred_file_name), index=True)
-
     err_file_name = prefix + f'errors_{time_str}.txt'
     with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
+
+    for model_name in model_names:
+        pred_file_name = prefix + f'{model_name}_predictions_{time_str}.csv'
+        model2pred[model_name].to_csv(os.path.join(params['save_path'], pred_file_name), index=True)
 
     print_verbose('done!\n')
