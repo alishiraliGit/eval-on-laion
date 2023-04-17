@@ -66,18 +66,16 @@ if __name__ == '__main__':
     df_index = []
     df_dict = {
         configs.LAIONConfig.URL_COL: [],
-        configs.LAIONConfig.TEXT_COL: [],
-        'image_to_image_similarity': [],
-        'similar_to_image_name': [],
-        'WNID': []
+        configs.LAIONConfig.TEXT_COL: []
     }
+    cr_idx_lookup = {}
 
     for image_idx, results in tqdm(cr_results.items()):
         image_name = 'ILSVRC2012_val_%08d.JPEG' % image_idx
         wnid = imagename2wnid[image_name]
 
         if wnid not in wnid2crindices:
-            wnid2crindices[wnid] = []
+            wnid2crindices[wnid] = set()
 
         for res in results:
             if params['do_sample'] and len(wnid2crindices[wnid]) >= configs.LAIONSamplingConfig.UNIFORM_SAMPLES:
@@ -85,15 +83,17 @@ if __name__ == '__main__':
 
             cr_idx = res[configs.CLIPRetrievalConfig.ID_COL]
 
-            wnid2crindices[wnid].append(cr_idx)
+            wnid2crindices[wnid].add(cr_idx)
+
+            if cr_idx in cr_idx_lookup:
+                continue
+            else:
+                cr_idx_lookup[cr_idx] = True
 
             df_index.append(cr_idx)
 
             df_dict[configs.LAIONConfig.URL_COL].append(res[configs.CLIPRetrievalConfig.URL_COL])
             df_dict[configs.LAIONConfig.TEXT_COL].append(res[configs.CLIPRetrievalConfig.TEXT_COL])
-            df_dict['image_to_image_similarity'].append(res[configs.CLIPRetrievalConfig.SIMILARITY_COL])
-            df_dict['similar_to_image_name'].append(image_name)
-            df_dict['WNID'].append(wnid)
 
     # ----- Create a dataframe -----
     df = pd.DataFrame(df_dict, index=df_index)

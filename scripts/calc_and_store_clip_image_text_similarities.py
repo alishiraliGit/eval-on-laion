@@ -106,6 +106,8 @@ if __name__ == '__main__':
     df = pd.read_parquet(file_path)
 
     # Preprocess
+    df[configs.LAIONConfig.TEXT_COL] = df[configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR)
+
     image_to_text_sim_col = 'image_to_text_similarity'
     if image_to_text_sim_col not in df:
         df[image_to_text_sim_col] = np.nan
