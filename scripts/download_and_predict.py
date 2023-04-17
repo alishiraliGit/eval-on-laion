@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name)).iloc[:1000]
 
     print_verbose('done!\n')
 
