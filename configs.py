@@ -35,14 +35,16 @@ class LAIONConfig:
     NUM_PARTS = 32
     SAFE_TAG = 'UNLIKELY'
     INDEX_SHIFT_PER_PART = 100000000
+    ID_COL = 'SAMPLE_ID'
     URL_COL = 'URL'
     TEXT_COL = 'TEXT'
+    NSFW_COL = 'NSFW'
     SIMILARITY_COL = 'similarity'
     LABELED_PREFIX = 'labeled_'
     SUBSET_PREFIX = 'subset_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
-    SUBSET_QUERIED_PREDICTED_PREFIX = 'subset_queried_predicted_'
-    SUBSET_CLIP_RETRIEVAL = 'subset_cr_'
+    SUBSET_CLIP_RETRIEVAL_PREFIX = 'subset_cr_'
+    PREDICTED_PREFIX = 'predicted_'
 
 
 class LAIONSamplingConfig:

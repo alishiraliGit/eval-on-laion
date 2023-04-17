@@ -162,7 +162,7 @@ if __name__ == '__main__':
     print_verbose('loading laion subset ...')
 
     if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL
+        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
     else:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
 

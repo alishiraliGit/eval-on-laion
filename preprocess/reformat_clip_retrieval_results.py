@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # Save df
     print_verbose(f'\tsaving df with {len(df)} rows.')
 
-    prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL
+    prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
     # For compatibility only
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, configs.LAIONConfig.NUM_PARTS - 1)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)

@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # Path
     parser.add_argument('--load_path', type=str, default=os.path.join('laion400m'))
-    parser.add_argument('--file_prefix', type=str, default=configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL + '*.parquet')
+    parser.add_argument('--file_prefix', type=str, default=configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX + '*.parquet')
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
