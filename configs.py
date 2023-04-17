@@ -27,7 +27,7 @@ class ILSVRCConfigs:
 
 
 class ILSVRCPredictorsConfig:
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32  # Used to be 64. Decreased for a better GPU memory management.
 
 
 class LAIONConfig:
