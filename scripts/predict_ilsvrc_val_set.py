@@ -87,6 +87,9 @@ if __name__ == '__main__':
         # Load the image
         image = Image.open(os.path.join(params['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
 
+        if image.mode != 'RGB':
+            continue
+
         images_batch.append(image)
         indices_batch.append(idx)
 
