@@ -85,11 +85,7 @@ if __name__ == '__main__':
         df = pd.read_parquet(os.path.join(params['laion_path'], subset_pred_file_name))
 
     else:
-        df = pd.read_parquet(
-            os.path.join(params['laion_path'], subset_file_name),
-            columns=[configs.LAIONConfig.ID_COL, configs.LAIONConfig.URL_COL, configs.LAIONConfig.TEXT_COL,
-                     configs.LAIONConfig.NSFW_COL, configs.LAIONConfig.SIMILARITY_COL]
-        )
+        df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
     print_verbose(f'\tfound {len(df)} rows.')
 
