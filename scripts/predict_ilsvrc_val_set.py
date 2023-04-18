@@ -83,14 +83,14 @@ if __name__ == '__main__':
     images_batch = []
     indices_batch = []
     model2pred = {model_name: None for model_name in model_names}
-    for idx in tqdm(range(1, 30 + 1)):
+    for idx in tqdm(range(1, configs.ILSVRCConfigs.NUM_VAL + 1)):
         # Load the image
         image = Image.open(os.path.join(params['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
 
         images_batch.append(image)
         indices_batch.append(idx)
 
-        if len(images_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and idx < 30: # configs.ILSVRCConfigs.NUM_VAL:
+        if len(images_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and idx < configs.ILSVRCConfigs.NUM_VAL:
             continue
 
         # Predict
