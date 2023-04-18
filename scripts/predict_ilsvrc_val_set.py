@@ -3,7 +3,6 @@ import os
 import time
 import argparse
 from PIL import Image
-from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
 

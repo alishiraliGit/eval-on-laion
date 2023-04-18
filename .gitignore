@@ -13,7 +13,7 @@ figs
 clip_text_embeddings
 clip_text_indices
 part*.parquet
-subset*.parquet
+subset*
 faiss_index
 credentials
 clip_text_embeddings_downloaded
