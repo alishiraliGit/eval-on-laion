@@ -3,7 +3,6 @@ import os
 import multiprocessing
 import time
 import argparse
-import glob
 from PIL import Image
 from io import BytesIO
 import numpy as np
@@ -16,6 +15,7 @@ import configs
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
+from utils import laion_utils as laionu
 from core.retrieve_image import download_image_content, verify_image
 from core.clip import CLIP
 
@@ -61,8 +61,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
-    parser.add_argument('--load_path', type=str, default=os.path.join('laion400m'))
-    parser.add_argument('--file_prefix', type=str, default=configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX + '*.parquet')
+    parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
+    parser.add_argument('--laion_until_part', type=int, default=31)
+
+    # Method
+    parser.add_argument('--queried_clip_retrieval', action='store_true')
+    parser.add_argument('--queried', action='store_true')
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
@@ -83,7 +87,16 @@ if __name__ == '__main__':
 
     print_verbose('initializing ...')
 
+    # Compute
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
+
+    # Set the files prefix
+    if params['queried_clip_retrieval']:
+        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
+    elif params['queried']:
+        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
+    else:
+        prefix = configs.LAIONConfig.SUBSET_PREFIX
 
     print_verbose('done!\n')
 
@@ -98,12 +111,11 @@ if __name__ == '__main__':
     print_verbose('loading and preprocessing dataframe ...')
 
     # Load
-    file_path = glob.glob(os.path.join(params['load_path'], params['file_prefix']))
-    assert len(file_path) == 1, 'found\n' + '\n'.join(file_path)
-    file_path = file_path[0]
-    print_verbose(f'\tloading {file_path} ...')
+    file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_name = prefix + file_name_wo_prefix
+    subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
-    df = pd.read_parquet(file_path)
+    df = pd.read_parquet(subset_file_path)
 
     # Preprocess
     df[configs.LAIONConfig.TEXT_COL] = df[configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR)
@@ -159,7 +171,7 @@ if __name__ == '__main__':
         if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df_todo) - 1):
             print_verbose('saving ....')
 
-            df.to_parquet(file_path, index=True)
+            df.to_parquet(subset_file_path, index=True)
 
             print_verbose('done!\n')
 
@@ -176,7 +188,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = file_path.replace('parquet', '_errors.txt')
+    err_file_path = subset_file_path.replace('parquet', '_errors.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
