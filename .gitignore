@@ -27,3 +27,4 @@ ILSVRC2012_img_val.tar
 val_img_embeddings.pkl
 del
 from_clip_retrieval
+ilsvrc2012/processed/predictions

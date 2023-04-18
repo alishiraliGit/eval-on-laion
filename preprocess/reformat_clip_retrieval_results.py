@@ -3,6 +3,8 @@ import os
 import argparse
 import pickle
 import json
+
+import numpy as np
 from tqdm import tqdm
 import pandas as pd
 
@@ -63,6 +65,7 @@ if __name__ == '__main__':
 
     # ----- Reformat -----
     wnid2crindices = {}
+    wnid2crindex2sims = {}
     df_index = []
     df_dict = {
         configs.LAIONConfig.URL_COL: [],
@@ -76,14 +79,21 @@ if __name__ == '__main__':
 
         if wnid not in wnid2crindices:
             wnid2crindices[wnid] = set()
+        if wnid not in wnid2crindex2sims:
+            wnid2crindex2sims[wnid] = {}
 
         for res in results:
             if params['do_sample'] and len(wnid2crindices[wnid]) >= configs.LAIONSamplingConfig.UNIFORM_SAMPLES:
                 break
 
             cr_idx = res[configs.CLIPRetrievalConfig.ID_COL]
+            similarity = res[configs.CLIPRetrievalConfig.SIMILARITY_COL]
 
             wnid2crindices[wnid].add(cr_idx)
+
+            if cr_idx not in wnid2crindex2sims[wnid]:
+                wnid2crindex2sims[wnid][cr_idx] = []
+            wnid2crindex2sims[wnid][cr_idx].append(similarity)
 
             if cr_idx in cr_idx_lookup:
                 continue
@@ -95,8 +105,18 @@ if __name__ == '__main__':
             df_dict[configs.LAIONConfig.URL_COL].append(res[configs.CLIPRetrievalConfig.URL_COL])
             df_dict[configs.LAIONConfig.TEXT_COL].append(res[configs.CLIPRetrievalConfig.TEXT_COL])
 
-    # ----- Create a dataframe -----
+    # ----- Parse -----
+    # Create a dataframe
     df = pd.DataFrame(df_dict, index=df_index)
+
+    # Set to list
+    wnid2crindices = {wnid: list(cr_indices) for wnid, cr_indices in wnid2crindices.items()}
+
+    # Average similarities
+    wnid2crimgimgsims = {}
+    for wnid, cr_indices in wnid2crindices.items():
+        similarities = [np.mean(wnid2crindex2sims[wnid][cr_idx]) for cr_idx in cr_indices]
+        wnid2crimgimgsims[wnid] = similarities
 
     # ----- Save -----
     print_verbose('saving...')
@@ -106,6 +126,12 @@ if __name__ == '__main__':
 
     with open(os.path.join(params['labels_path'], 'wnid2crindices.pkl'), open_type) as f:
         pickle.dump(wnid2crindices, f)
+
+    # Save similarities
+    print_verbose(f'\tsaving image to text similarities.')
+
+    with open(os.path.join(params['labels_path'], 'wnid2crimgimgsims.pkl'), open_type) as f:
+        pickle.dump(wnid2crimgimgsims, f)
 
     # Save df
     print_verbose(f'\tsaving df with {len(df)} rows.')
