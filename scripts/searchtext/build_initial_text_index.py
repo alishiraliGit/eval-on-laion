@@ -3,7 +3,7 @@ import sys
 import glob
 import numpy as np
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 from core.faiss_index import FaissIndex
 
@@ -11,10 +11,10 @@ from core.faiss_index import FaissIndex
 if __name__ == '__main__':
     # ----- Settings -----
     # Path
-    embed_path = os.path.join('..', 'laion400m', 'processed', 'clip_text_embeddings')
-    indices_path = os.path.join('..', 'laion400m', 'processed', 'clip_text_indices')
+    embed_path = os.path.join('..', '..', 'laion400m', 'processed', 'clip_text_embeddings')
+    indices_path = os.path.join('..', '..', 'laion400m', 'processed', 'clip_text_indices')
 
-    faiss_index_folder = os.path.join('..', 'laion400m', 'processed', 'faiss_index')
+    faiss_index_folder = os.path.join('..', '..', 'laion400m', 'processed', 'faiss_index')
     os.makedirs(faiss_index_folder, exist_ok=True)
 
     postfix = '_test3'

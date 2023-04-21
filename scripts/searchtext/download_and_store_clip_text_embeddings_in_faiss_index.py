@@ -2,10 +2,9 @@ import sys
 import os
 import argparse
 import numpy as np
-import faiss
 import time
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from core.faiss_index import FaissIndex

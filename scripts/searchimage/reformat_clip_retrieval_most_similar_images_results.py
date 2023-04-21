@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu

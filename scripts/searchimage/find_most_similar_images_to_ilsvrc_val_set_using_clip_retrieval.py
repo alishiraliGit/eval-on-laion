@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from clip_retrieval.clip_client import ClipClient, Modality
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu

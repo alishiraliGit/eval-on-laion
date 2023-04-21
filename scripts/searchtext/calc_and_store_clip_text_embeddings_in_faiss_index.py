@@ -5,7 +5,7 @@ from tqdm import tqdm
 import numpy as np
 from sklearn.preprocessing import normalize
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from core.clip import CLIP

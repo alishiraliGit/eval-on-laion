@@ -29,6 +29,7 @@ if __name__ == '__main__':
 
     # Method
     parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--not_sampled', action='store_true')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -101,7 +102,13 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
+    if params['queried']:
+        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
+    elif params['not_sampled']:
+        prefix = configs.LAIONConfig.SUBSET_NOT_SAMPLED_PREFIX
+    else:
+        prefix = configs.LAIONConfig.SUBSET_PREFIX
+
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 

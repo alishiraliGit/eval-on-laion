@@ -1,7 +1,6 @@
 import os
 import string
 import urllib.request
-import numpy as np
 import pandas as pd
 
 import configs

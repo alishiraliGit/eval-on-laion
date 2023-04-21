@@ -5,7 +5,7 @@ import pandas as pd
 import pickle
 from tqdm import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 import utils.laion_utils as lt
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     settings = dict()
 
     # Path
-    settings['laion_path'] = os.path.join('..', 'laion400m')
+    settings['laion_path'] = os.path.join('..', '..', 'laion400m')
     settings['map_path'] = os.path.join(settings['laion_path'], 'processed')
     settings['imgs_path'] = os.path.join(settings['laion_path'], 'imgs')
 

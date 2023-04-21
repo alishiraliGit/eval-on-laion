@@ -40,8 +40,9 @@ class LAIONConfig:
     TEXT_COL = 'TEXT'
     NSFW_COL = 'NSFW'
     SIMILARITY_COL = 'similarity'
-    LABELED_PREFIX = 'labeled_'
+
     SUBSET_PREFIX = 'subset_'
+    SUBSET_NOT_SAMPLED_PREFIX = 'subset_all_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
     SUBSET_CLIP_RETRIEVAL_PREFIX = 'subset_cr_'
     PREDICTED_PREFIX = 'predicted_'

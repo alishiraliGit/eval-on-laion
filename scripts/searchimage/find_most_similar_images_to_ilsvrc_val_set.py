@@ -11,7 +11,7 @@ from sklearn.preprocessing import normalize
 import pandas as pd
 from tqdm.auto import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu

@@ -2,12 +2,11 @@ import pickle
 import sys
 import os
 import argparse
-import glob
 from PIL import Image
 from tqdm.auto import tqdm
 import numpy as np
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from core.clip import CLIP

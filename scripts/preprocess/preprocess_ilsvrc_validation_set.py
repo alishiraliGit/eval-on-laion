@@ -5,7 +5,7 @@ import os
 from scipy.io import loadmat
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..'))
 
 import configs
 

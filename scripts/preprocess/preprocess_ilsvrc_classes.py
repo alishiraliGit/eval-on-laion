@@ -4,7 +4,7 @@ import pickle
 
 from tqdm import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..'))
 
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
@@ -22,7 +22,7 @@ def main():
     settings = dict()
 
     # Path
-    settings['load_path'] = os.path.join('..', 'ilsvrc2012')
+    settings['load_path'] = os.path.join('..', '..', 'ilsvrc2012')
     settings['load_file_name'] = 'ILSVRC2012_synsets.txt'
 
     settings['save_path'] = os.path.join(settings['load_path'], 'processed')
