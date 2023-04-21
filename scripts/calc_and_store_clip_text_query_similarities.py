@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     # Column names
     query_col = params['query_col']
-    sim_col = 'text_to_query_similarity'
+    sim_col = f'text_to_{params["query_col"]}_similarity'
 
     print_verbose('done!\n')
 
