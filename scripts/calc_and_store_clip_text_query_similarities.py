@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.A_PHOTO_OF_NAME_DEF)
-    parser.add_argument('--query_col', type=str)
+    parser.add_argument('--query_key', type=str, help='wnid or lemma')
 
     # Compute
     parser.add_argument('--gpu_id', type=int, default=0)
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    query_col = params['query_col']
-    sim_col = f'text_to_{params["query_col"]}_similarity'
+    query_col = params['query_type'] + '_' + params['query_key']
+    sim_col = f'text_to_{query_col}_similarity'
 
     print_verbose('done!\n')
 
