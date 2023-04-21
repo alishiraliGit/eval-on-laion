@@ -3,6 +3,7 @@ import os
 import argparse
 import pickle
 import glob
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
@@ -29,8 +30,9 @@ if __name__ == '__main__':
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='*')
 
-    parser.add_argument('--lemma_to_wnid_map_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'processed', 'lemma2wnid(unique_in_wordnet).pkl'))
+    parser.add_argument('--lemma2wnid_path', type=str,
+                        default=os.path.join('ilsvrc2012', 'processed',
+                                             'lemma2wnid(unique_in_ilsvrc_ignored_empty_wnids).pkl'))
 
     # Subset method
     parser.add_argument('--queried', action='store_true')
@@ -38,6 +40,7 @@ if __name__ == '__main__':
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.A_PHOTO_OF_NAME_DEF)
+    parser.add_argument('--query_col', type=str)
 
     # Compute
     parser.add_argument('--gpu_id', type=int, default=0)
@@ -50,6 +53,10 @@ if __name__ == '__main__':
     params = vars(parser.parse_args())
 
     # ----- Init. -----
+    logu.verbose = params['verbose']
+
+    print_verbose('initializing ...')
+
     # Env
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
     logu.verbose = params['verbose']
@@ -66,8 +73,10 @@ if __name__ == '__main__':
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    query_col = 'query'
+    query_col = params['query_col']
     sim_col = 'text_to_query_similarity'
+
+    print_verbose('done!\n')
 
     # ----- Load the subset -----
     print_verbose('loading laion subset ...')
@@ -120,7 +129,7 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Load lemma to wnid map -----
-    with open(params['lemma_to_wnid_map_path'], 'rb') as f:
+    with open(params['lemma2wnid_path'], 'rb') as f:
         lemma2wnid = pickle.load(f)
 
     # ----- Design queries -----
@@ -139,15 +148,16 @@ if __name__ == '__main__':
     # ----- Init. CLIP -----
     clip = CLIP()
 
-    # ----- Loop over df ------
-    for iloc in tqdm(range(0, len(df), configs.CLIPConfig.BATCH_SIZE),
-                     desc='calc. clip text to query similarity', disable=not logu.verbose):
-        rng = range(iloc, iloc + configs.CLIPConfig.BATCH_SIZE)
+    # ----- Loop over keys ------
+    laionindices = list(laionindex2query.keys())
+    for cnt in tqdm(range(0, len(laionindices), configs.CLIPConfig.BATCH_SIZE),
+                    desc='calc. clip text to query similarity', disable=not logu.verbose):
+        indices_batch = laionindices[cnt: (cnt + configs.CLIPConfig.BATCH_SIZE)]
 
         # Extract a batch
-        texts_batch = df.iloc[rng][configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
-        queries_batch = df.iloc[rng][query_col].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
-        indices_batch = df.index[rng].to_numpy(dtype=int)
+        texts_batch = \
+            df.loc[indices_batch, configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
+        queries_batch = df.loc[indices_batch, query_col].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
 
         try:
             # Get embeddings
