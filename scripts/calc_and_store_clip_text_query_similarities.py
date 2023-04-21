@@ -3,7 +3,6 @@ import os
 import argparse
 import pickle
 import glob
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
@@ -143,7 +142,7 @@ if __name__ == '__main__':
         laionindex2query[laionindex] = query_func(wnid)
 
     # Add to df
-    df['query'] = df.index.map(laionindex2query)
+    df[query_col] = df.index.map(laionindex2query)
 
     # ----- Init. CLIP -----
     clip = CLIP()
