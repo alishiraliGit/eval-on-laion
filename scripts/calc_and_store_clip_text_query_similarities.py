@@ -3,6 +3,7 @@ import os
 import argparse
 import pickle
 import glob
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
@@ -167,7 +168,7 @@ if __name__ == '__main__':
             query_embeds_batch_norm = normalize(query_embeds_batch, axis=1, norm='l2')
 
             # Find similarities
-            sims = text_embeds_batch_norm.dot(query_embeds_batch_norm.T).tolist()
+            sims = np.sum(text_embeds_batch_norm * query_embeds_batch_norm, axis=1).tolist()
 
             # Update df
             df.loc[indices_batch, sim_col] = sims
