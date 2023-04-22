@@ -188,7 +188,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = subset_file_path.replace('parquet', '_errors.txt')
+    err_file_path = subset_file_path.replace('parquet', 'imgtxtsim_errors.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
