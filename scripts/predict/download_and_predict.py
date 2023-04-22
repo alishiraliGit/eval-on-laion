@@ -7,6 +7,7 @@ from PIL import Image
 from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
+import torch
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -44,6 +45,7 @@ def predict(args):
 
     # Init.
     ptu.device = device
+    torch.cuda.set_per_device_memory_fraction(device, 0.2)
 
     # Load the images
     imgs = []
