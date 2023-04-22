@@ -45,7 +45,7 @@ def predict(args):
 
     # Init.
     ptu.device = device
-    torch.cuda.set_per_device_memory_fraction(device, 0.2)
+    # torch.cuda.set_per_device_memory_fraction(device, 0.2)
 
     # Load the images
     imgs = []
@@ -68,6 +68,8 @@ def predict(args):
             mdl2pred[mdl_name] = hfu.predict(ps[mdl_name], mdls[mdl_name], mdl2label2wnid[mdl_name], imgs)
         return inds, mdl2pred, errs
     except Exception as e:
+        if "CUDA out of memory" in str(e):
+            print(e)
         errs.append({'cause': 'In predicting labels of a batch of images an error occurred.', 'error': e})
         return inds, None, errs
 
