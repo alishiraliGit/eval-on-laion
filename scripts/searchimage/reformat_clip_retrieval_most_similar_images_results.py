@@ -64,59 +64,84 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Reformat -----
-    wnid2crindices = {}
     wnid2crindex2sims = {}
-    df_index = []
-    df_dict = {
-        configs.LAIONConfig.URL_COL: [],
-        configs.LAIONConfig.TEXT_COL: []
-    }
-    cr_idx_lookup = {}
+    wnid2crindex2text = {}
+    wnid2crindex2url = {}
 
-    for image_idx, results in tqdm(cr_results.items()):
+    for image_idx, results in tqdm(cr_results.items(), desc='collecting results into dicts'):
         image_name = 'ILSVRC2012_val_%08d.JPEG' % image_idx
         wnid = imagename2wnid[image_name]
 
-        if wnid not in wnid2crindices:
-            wnid2crindices[wnid] = set()
         if wnid not in wnid2crindex2sims:
             wnid2crindex2sims[wnid] = {}
+            wnid2crindex2text[wnid] = {}
+            wnid2crindex2url[wnid] = {}
 
         for res in results:
-            if params['do_sample'] and len(wnid2crindices[wnid]) >= configs.LAIONSamplingConfig.UNIFORM_SAMPLES:
-                break
-
             cr_idx = res[configs.CLIPRetrievalConfig.ID_COL]
-            similarity = res[configs.CLIPRetrievalConfig.SIMILARITY_COL]
 
-            wnid2crindices[wnid].add(cr_idx)
+            similarity = res[configs.CLIPRetrievalConfig.SIMILARITY_COL]
+            text = res[configs.CLIPRetrievalConfig.TEXT_COL]
+            url = res[configs.CLIPRetrievalConfig.URL_COL]
 
             if cr_idx not in wnid2crindex2sims[wnid]:
-                wnid2crindex2sims[wnid][cr_idx] = []
-            wnid2crindex2sims[wnid][cr_idx].append(similarity)
-
-            if cr_idx in cr_idx_lookup:
-                continue
+                wnid2crindex2sims[wnid][cr_idx] = [similarity]
+                wnid2crindex2text[wnid][cr_idx] = text
+                wnid2crindex2url[wnid][cr_idx] = url
             else:
-                cr_idx_lookup[cr_idx] = True
+                wnid2crindex2sims[wnid][cr_idx].append(similarity)
 
-            df_index.append(cr_idx)
+    # Reduction
+    wnid2crindices = {}
+    wnid2crsims = {}
+    wnid2texts = {}
+    wnid2urls = {}
 
-            df_dict[configs.LAIONConfig.URL_COL].append(res[configs.CLIPRetrievalConfig.URL_COL])
-            df_dict[configs.LAIONConfig.TEXT_COL].append(res[configs.CLIPRetrievalConfig.TEXT_COL])
+    for wnid in tqdm(wnid2crindex2sims, desc='reducing the results'):
+        crindex2sims = wnid2crindex2sims[wnid]
+        crindex2text = wnid2crindex2text[wnid]
+        crindex2url = wnid2crindex2url[wnid]
+
+        wnid2crindices[wnid] = []
+        wnid2crsims[wnid] = []
+        wnid2texts[wnid] = []
+        wnid2urls[wnid] = []
+
+        for cr_idx in crindex2sims:
+            wnid2crindices[wnid].append(cr_idx)
+            wnid2crsims[wnid].append(np.max(crindex2sims[cr_idx]))
+            wnid2texts[wnid].append(crindex2text[cr_idx])
+            wnid2urls[wnid].append(crindex2url[cr_idx])
+
+    # ----- Sample -----
+    if params['do_sample']:
+
+        for wnid, sims in tqdm(wnid2crsims.items(), desc='sampling'):
+            pos = np.argsort(sims)[-configs.LAIONSamplingConfig.UNIFORM_SAMPLES:]
+
+            wnid2crindices[wnid] = np.array(wnid2crindices[wnid])[pos].tolist()
+            wnid2crsims[wnid] = np.array(wnid2crsims[wnid])[pos].tolist()
+            wnid2texts[wnid] = np.array(wnid2texts[wnid])[pos].tolist()
+            wnid2urls[wnid] = np.array(wnid2urls[wnid])[pos].tolist()
 
     # ----- Parse -----
+    text_col = configs.LAIONConfig.TEXT_COL
+    url_col = configs.LAIONConfig.URL_COL
+
+    df_index = []
+    df_dict = {text_col: [], url_col: []}
+
+    for wnid, crindices in tqdm(wnid2crindices.items(), desc='getting a dataframe out of results'):
+        df_index.extend(crindices)
+        df_dict[text_col].extend(wnid2texts[wnid])
+        df_dict[url_col].extend(wnid2urls[wnid])
+
     # Create a dataframe
     df = pd.DataFrame(df_dict, index=df_index)
 
-    # Set to list
-    wnid2crindices = {wnid: list(cr_indices) for wnid, cr_indices in wnid2crindices.items()}
-
-    # Average similarities
-    wnid2crimgimgsims = {}
-    for wnid, cr_indices in wnid2crindices.items():
-        similarities = [np.mean(wnid2crindex2sims[wnid][cr_idx]) for cr_idx in cr_indices]
-        wnid2crimgimgsims[wnid] = similarities
+    # Drop duplicates
+    df.index.name = 'cr_index'
+    df = df.groupby('cr_index').first()
 
     # ----- Save -----
     print_verbose('saving...')
@@ -128,10 +153,10 @@ if __name__ == '__main__':
         pickle.dump(wnid2crindices, f)
 
     # Save similarities
-    print_verbose(f'\tsaving image to text similarities.')
+    print_verbose(f'\tsaving image to image similarities.')
 
     with open(os.path.join(params['labels_path'], 'wnid2crimgimgsims.pkl'), open_type) as f:
-        pickle.dump(wnid2crimgimgsims, f)
+        pickle.dump(wnid2crsims, f)
 
     # Save df
     print_verbose(f'\tsaving df with {len(df)} rows.')
