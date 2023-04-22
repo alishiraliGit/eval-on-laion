@@ -68,8 +68,6 @@ def predict(args):
             mdl2pred[mdl_name] = hfu.predict(ps[mdl_name], mdls[mdl_name], mdl2label2wnid[mdl_name], imgs)
         return inds, mdl2pred, errs
     except Exception as e:
-        if "CUDA out of memory" in str(e):
-            print(e)
         errs.append({'cause': 'In predicting labels of a batch of images an error occurred.', 'error': e})
         return inds, None, errs
 
@@ -172,7 +170,8 @@ if __name__ == '__main__':
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+    # TODO
+    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name)).iloc[:1000]
 
     print_verbose('done!\n')
 
