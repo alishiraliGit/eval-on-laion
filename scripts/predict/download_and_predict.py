@@ -7,7 +7,6 @@ from PIL import Image
 from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
-import torch
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -68,6 +67,8 @@ def predict(args):
             mdl2pred[mdl_name] = hfu.predict(ps[mdl_name], mdls[mdl_name], mdl2label2wnid[mdl_name], imgs)
         return inds, mdl2pred, errs
     except Exception as e:
+        if 'CUDA out of memory' in str(e):
+            print('In predicting labels of a batch of images an error occurred.\n' + str(e))
         errs.append({'cause': 'In predicting labels of a batch of images an error occurred.', 'error': e})
         return inds, None, errs
 
@@ -131,6 +132,14 @@ if __name__ == '__main__':
     # Path
     os.makedirs(params['save_path'], exist_ok=True)
 
+    # Prefix
+    if params['queried_clip_retrieval']:
+        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
+    elif params['queried']:
+        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
+    else:
+        prefix = configs.LAIONConfig.SUBSET_PREFIX
+
     print_verbose('done!\n')
 
     # ----- Select the models -----
@@ -163,15 +172,9 @@ if __name__ == '__main__':
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')
 
-    if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
-    else:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX if params['queried'] else configs.LAIONConfig.SUBSET_PREFIX
-
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
-    # TODO
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name)).iloc[:1000]
+    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
     print_verbose('done!\n')
 
@@ -289,14 +292,14 @@ if __name__ == '__main__':
     # ----- Save the successful predictions ------
     print_verbose('saving ....')
 
-    time_str = time.strftime('%d-%m-%Y_%H-%M-%S')
+    ver = time.strftime('%d-%m-%Y_%H-%M-%S')
 
-    err_file_name = prefix + f'errors_{time_str}.txt'
+    err_file_name = prefix + f'errors_{ver}.txt'
     with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
     for model_name in model_names:
-        pred_file_name = prefix + f'{model_name}_predictions_{time_str}.csv'
+        pred_file_name = prefix + f'{model_name}_predictions_{ver}.csv'
         model2pred[model_name].to_csv(os.path.join(params['save_path'], pred_file_name), index=True)
 
     print_verbose('done!\n')
