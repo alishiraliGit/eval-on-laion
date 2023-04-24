@@ -193,3 +193,9 @@ if __name__ == '__main__':
         f.write('\n'.join(errors))
 
     print_verbose('done!\n')
+
+    print_verbose('saving ....')
+
+    df.to_parquet(subset_file_path, index=True)
+
+    print_verbose('done!\n')
