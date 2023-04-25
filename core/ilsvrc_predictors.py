@@ -33,7 +33,9 @@ def select_ilsvrc_predictors(types):
             processors.update(processors_21k)
             models.update(models_21k)
         elif t == ILSVRCPredictorType.IMAGENET_VIT:
-            pass
+            model_names.extend(model_names_vit)
+            processors.update(processors_vit)
+            models.update(models_vit)
         else:
             raise Exception(f'Cannot find the model specified: {t}')
 
@@ -108,9 +110,9 @@ model_names_vit = [
 ]
 
 processors_vit = {
-    lambda: ViTImageProcessor.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
+    lambda: ViTImageProcessor.from_pretrained(f'google/{mdl_name}') for mdl_name in model_names_vit
 }
 
 models_vit = {
-    lambda: ViTForImageClassification.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
+    lambda: ViTForImageClassification.from_pretrained(f'google/{mdl_name}') for mdl_name in model_names_vit
 }
