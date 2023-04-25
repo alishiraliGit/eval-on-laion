@@ -110,9 +110,10 @@ model_names_vit = [
 ]
 
 processors_vit = {
-    lambda: ViTImageProcessor.from_pretrained(f'google/{mdl_name}') for mdl_name in model_names_vit
+    model_name: lambda: ViTImageProcessor.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
 }
 
 models_vit = {
-    lambda: ViTForImageClassification.from_pretrained(f'google/{mdl_name}') for mdl_name in model_names_vit
+    model_name: lambda: ViTForImageClassification.from_pretrained(f'google/{model_name}')
+    for model_name in model_names_vit
 }
