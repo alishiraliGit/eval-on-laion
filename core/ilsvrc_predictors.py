@@ -6,9 +6,10 @@ from utils import pytorch_utils as ptu
 
 
 class ILSVRCPredictorType:
-    IMAGENET_1K = 'imagenet-1k',
+    IMAGENET_1K = 'imagenet-1k'
     IMAGENET_PT21k_FT1K = 'imagenet-pt21k-ft1k'
     IMAGENET_21K = 'imagenet-21k'
+    IMAGENET_VIT = 'imagenet-vit'
 
 
 def select_ilsvrc_predictors(types):
@@ -31,6 +32,8 @@ def select_ilsvrc_predictors(types):
             model_names.extend(model_names_21k)
             processors.update(processors_21k)
             models.update(models_21k)
+        elif t == ILSVRCPredictorType.IMAGENET_VIT:
+            pass
         else:
             raise Exception(f'Cannot find the model specified: {t}')
 
@@ -89,4 +92,25 @@ processors_21k = {
 models_21k = {
     'ConvNeXT-21k': lambda: ConvNextForImageClassification.from_pretrained('facebook/convnext-base-224-22k'),
     'BEiT-21k': lambda: BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
+}
+
+
+###############
+# Other ViT models
+###############
+model_names_vit = [
+    'vit-base-patch16-224',
+    'vit-base-patch16-384',
+    'vit-base-patch32-384',
+    'vit-large-patch16-224',
+    'vit-large-patch16-384',
+    'vit-large-patch32-384'
+]
+
+processors_vit = {
+    lambda: ViTImageProcessor.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
+}
+
+models_vit = {
+    lambda: ViTForImageClassification.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
 }

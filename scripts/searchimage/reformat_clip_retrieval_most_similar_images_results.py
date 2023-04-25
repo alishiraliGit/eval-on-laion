@@ -65,6 +65,7 @@ if __name__ == '__main__':
 
     # ----- Reformat -----
     wnid2crindex2sims = {}
+    wnid2crindex2imgindices = {}
     wnid2crindex2text = {}
     wnid2crindex2url = {}
 
@@ -74,6 +75,7 @@ if __name__ == '__main__':
 
         if wnid not in wnid2crindex2sims:
             wnid2crindex2sims[wnid] = {}
+            wnid2crindex2imgindices[wnid] = {}
             wnid2crindex2text[wnid] = {}
             wnid2crindex2url[wnid] = {}
 
@@ -86,30 +88,36 @@ if __name__ == '__main__':
 
             if cr_idx not in wnid2crindex2sims[wnid]:
                 wnid2crindex2sims[wnid][cr_idx] = [similarity]
+                wnid2crindex2imgindices[wnid][cr_idx] = [image_idx]
                 wnid2crindex2text[wnid][cr_idx] = text
                 wnid2crindex2url[wnid][cr_idx] = url
             else:
                 wnid2crindex2sims[wnid][cr_idx].append(similarity)
+                wnid2crindex2imgindices[wnid][cr_idx].append(image_idx)
 
     # Reduction
     wnid2crindices = {}
     wnid2crsims = {}
+    wnid2imgindices = {}
     wnid2texts = {}
     wnid2urls = {}
 
     for wnid in tqdm(wnid2crindex2sims, desc='reducing the results'):
         crindex2sims = wnid2crindex2sims[wnid]
+        crindex2imgindices = wnid2crindex2imgindices[wnid]
         crindex2text = wnid2crindex2text[wnid]
         crindex2url = wnid2crindex2url[wnid]
 
         wnid2crindices[wnid] = []
         wnid2crsims[wnid] = []
+        wnid2imgindices[wnid] = []
         wnid2texts[wnid] = []
         wnid2urls[wnid] = []
 
         for cr_idx in crindex2sims:
             wnid2crindices[wnid].append(cr_idx)
             wnid2crsims[wnid].append(np.max(crindex2sims[cr_idx]))
+            wnid2imgindices[wnid].append(crindex2imgindices[cr_idx][np.argmax(crindex2sims[cr_idx])])
             wnid2texts[wnid].append(crindex2text[cr_idx])
             wnid2urls[wnid].append(crindex2url[cr_idx])
 
@@ -121,6 +129,7 @@ if __name__ == '__main__':
 
             wnid2crindices[wnid] = np.array(wnid2crindices[wnid])[pos].tolist()
             wnid2crsims[wnid] = np.array(wnid2crsims[wnid])[pos].tolist()
+            wnid2imgindices[wnid] = np.array(wnid2imgindices[wnid])[pos].tolist()
             wnid2texts[wnid] = np.array(wnid2texts[wnid])[pos].tolist()
             wnid2urls[wnid] = np.array(wnid2urls[wnid])[pos].tolist()
 
@@ -152,6 +161,11 @@ if __name__ == '__main__':
     with open(os.path.join(params['labels_path'], 'wnid2crindices.pkl'), open_type) as f:
         pickle.dump(wnid2crindices, f)
 
+    print_verbose(f'\tsaving which ilsvrc images correspond to the sampled images.')
+
+    with open(os.path.join(params['labels_path'], 'wnid2ilsvrcimgindices.pkl'), open_type) as f:
+        pickle.dump(wnid2imgindices, f)
+
     # Save similarities
     print_verbose(f'\tsaving image to image similarities.')
 
@@ -159,6 +173,7 @@ if __name__ == '__main__':
         pickle.dump(wnid2crsims, f)
 
     # Save df
+    raise Exception
     print_verbose(f'\tsaving df with {len(df)} rows.')
 
     prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
