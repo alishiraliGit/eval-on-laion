@@ -173,7 +173,6 @@ if __name__ == '__main__':
         pickle.dump(wnid2crsims, f)
 
     # Save df
-    raise Exception
     print_verbose(f'\tsaving df with {len(df)} rows.')
 
     prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
