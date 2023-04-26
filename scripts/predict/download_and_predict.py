@@ -41,11 +41,10 @@ def download_image_wrapper(args):
 
 
 def predict(args):
-    idx_img_list, mdl_names, ps, mdls, mdl2label2wnid, device = args
+    idx_img_list, mdl_names, ps, mdls, mdl2label2wnid, gpu_id = args
 
     # Init.
-    ptu.device = device
-    # torch.cuda.set_per_process_memory_fraction(0.2, device)
+    ptu.init_gpu(gpu_id=gpu_id, verbose=False)
 
     # Load the images
     imgs = []
@@ -129,9 +128,6 @@ if __name__ == '__main__':
     logu.verbose = params['verbose']
 
     print_verbose('initializing ...')
-
-    # Env
-    ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Path
     os.makedirs(params['save_path'], exist_ok=True)
@@ -229,7 +225,7 @@ if __name__ == '__main__':
                 processors,
                 models,
                 model2label2wnid,
-                ptu.device
+                params['gpu_id']
             )]
         )
         prediction_results.append(pred_res)
