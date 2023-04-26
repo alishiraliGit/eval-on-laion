@@ -7,7 +7,6 @@ from PIL import Image
 from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
-import torch
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -40,11 +39,68 @@ def download_image_wrapper(args):
         return idx, None, {'cause': f'In downloading image of index {idx} an error occurred.', 'error': e}
 
 
-def predict(args):
-    idx_img_list, mdl_names, ps, mdls, mdl2label2wnid, gpu_id = args
+model_names = []
+processors = []
+models = []
+model2label2wnid = {}
 
-    # Init.
-    ptu.init_gpu(gpu_id=gpu_id, verbose=True)
+
+def init_worker(pars):
+    global model_names, processors, models, model2label2wnid
+
+    worker_id = multiprocessing.current_process().name
+
+    logu.verbose = pars['verbose']
+
+    # Init
+    print_verbose(f'initializing worker {worker_id} ...')
+
+    ptu.init_gpu(use_gpu=not pars['no_gpu'], gpu_id=pars['gpu_id'])
+
+    print_verbose('done!\n')
+
+    # Load the models
+    print_verbose(f'loading models in worker {worker_id} ...')
+
+    if pars['predictors'] == 'selected':
+        model_names, processors, models = select_ilsvrc_predictors([
+            ILSVRCPredictorType.IMAGENET_1K,
+            ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
+            ILSVRCPredictorType.IMAGENET_21K
+        ])
+    if pars['predictors'] == 'all':
+        model_names, processors, models = select_ilsvrc_predictors([
+            ILSVRCPredictorType.IMAGENET_RESNET,
+            ILSVRCPredictorType.IMAGENET_VIT,
+            ILSVRCPredictorType.IMAGENET_BEIT,
+            ILSVRCPredictorType.IMAGENET_CONVNEXT,
+        ])
+    else:
+        model_names, processors, models = select_ilsvrc_predictors([pars['predictors']])
+
+    print_verbose('done!\n')
+
+    # Load ILSVRC labels
+    print_verbose(f'loading ILSVRC lemmas and wnids in worker {worker_id} ...')
+
+    id_lemmas_df = load_lemmas_and_wnids(pars['ilsvrc_synsets_path'])
+
+    print_verbose('done!\n')
+
+    # Map model outputs to wnids
+    model2label2wnid = {}
+    for mdl_name in model_names:
+        print_verbose(f'mapping {mdl_name} outputs to ilsvrc classes in worker {worker_id} ...')
+
+        model2label2wnid[mdl_name] = hfu.get_label2wnid_map(models[mdl_name], id_lemmas_df)
+
+        print_verbose('done!\n')
+
+
+def predict(args):
+    global model_names, processors, models, model2label2wnid
+
+    idx_img_list = args
 
     # Load the images
     imgs = []
@@ -63,8 +119,13 @@ def predict(args):
     # Predict
     mdl2pred = {}
     try:
-        for mdl_name in mdl_names:
-            mdl2pred[mdl_name] = hfu.predict(ps[mdl_name], mdls[mdl_name], mdl2label2wnid[mdl_name], imgs)
+        for mdl_name in model_names:
+            mdl2pred[mdl_name] = hfu.predict(
+                processors[mdl_name],
+                models[mdl_name],
+                model2label2wnid[mdl_name],
+                imgs
+            )
         return inds, mdl2pred, errs
     except Exception as e:
         if 'CUDA out of memory' in str(e):
@@ -88,8 +149,12 @@ def update_pred_pb(pred_pb, pred_results):
     latest_num_ready_results = num_ready_results(pred_results)
 
 
+def dummy_func(_args):
+    return None
+
+
 if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn')
+    # multiprocessing.set_start_method('spawn')
 
     # ----- Get arguments from input -----
     parser = argparse.ArgumentParser()
@@ -129,9 +194,6 @@ if __name__ == '__main__':
 
     print_verbose('initializing ...')
 
-    # Compute
-    ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
-
     # Path
     os.makedirs(params['save_path'], exist_ok=True)
 
@@ -145,43 +207,6 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Select the models -----
-    print_verbose('loading models ...')
-
-    if params['predictors'] == 'selected':
-        model_names, processors, models = select_ilsvrc_predictors([
-            ILSVRCPredictorType.IMAGENET_1K,
-            ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
-            ILSVRCPredictorType.IMAGENET_21K
-        ])
-    if params['predictors'] == 'all':
-        model_names, processors, models = select_ilsvrc_predictors([
-            ILSVRCPredictorType.IMAGENET_RESNET,
-            ILSVRCPredictorType.IMAGENET_VIT,
-            ILSVRCPredictorType.IMAGENET_BEIT,
-            ILSVRCPredictorType.IMAGENET_CONVNEXT,
-        ])
-    else:
-        model_names, processors, models = select_ilsvrc_predictors([params['predictors']])
-
-    print_verbose('done!\n')
-
-    # ----- Load ILSVRC labels -----
-    print_verbose('loading ILSVRC lemmas and wnids ...')
-
-    id_lemmas_df = load_lemmas_and_wnids(params['ilsvrc_synsets_path'])
-
-    print_verbose('done!\n')
-
-    # ----- Map model outputs to wnids -----
-    model2label2wnid = {}
-    for model_name in model_names:
-        print_verbose(f'mapping {model_name} outputs to ilsvrc classes')
-
-        model2label2wnid[model_name] = hfu.get_label2wnid_map(models[model_name], id_lemmas_df)
-
-        print_verbose('done!\n')
-
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')
 
@@ -194,7 +219,10 @@ if __name__ == '__main__':
     # ----- Init. parallel download and predict -----
     event = multiprocessing.Event()
     pool_download = multiprocessing.Pool(params['n_process_download'], setup, (event,))
-    pool_predict = multiprocessing.Pool(params['n_process_predict'])
+    pool_predict = multiprocessing.Pool(params['n_process_predict'], initializer=init_worker, initargs=(params,))
+
+    # Init pool_predict
+    pool_predict.map(dummy_func, [1]*params['n_process_predict'])
 
     # ----- Start download -----
     download_results = pool_download.imap(download_image_wrapper, df.iterrows())
@@ -222,14 +250,7 @@ if __name__ == '__main__':
         # Send the batch for prediction
         pred_res = pool_predict.apply_async(
             predict,
-            [(
-                download_ready_results,
-                model_names,
-                processors,
-                models,
-                model2label2wnid,
-                params['gpu_id']
-            )]
+            [download_ready_results]
         )
         prediction_results.append(pred_res)
 
@@ -248,14 +269,7 @@ if __name__ == '__main__':
     # Send the remaining for prediction
     pred_res = pool_predict.apply_async(
         predict,
-        [(
-            download_ready_results,
-            model_names,
-            processors,
-            models,
-            model2label2wnid,
-            params['gpu_id']
-        )]
+        [download_ready_results]
     )
     prediction_results.append(pred_res)
 
