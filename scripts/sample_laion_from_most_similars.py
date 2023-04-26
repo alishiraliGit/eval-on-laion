@@ -24,11 +24,12 @@ if __name__ == '__main__':
     parser.add_argument('--laion_until_part', type=int, default=31)
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_filter', type=str, default='*')
+    parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
+    parser.add_argument('--labels_save_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
 
     # Filtering
     parser.add_argument('--similarity_col', type=str, default='text_to_a_photo_of_name_def_wnid_similarity')
-    parser.add_argument('--similarity_th', type=float)
+    parser.add_argument('--similarity_th', type=float, default=0.805)
 
     parser.add_argument('--remove_nsfw', action='store_true')
 
@@ -51,6 +52,9 @@ if __name__ == '__main__':
 
     # Prefix
     prefix = configs.LAIONConfig.SUBSET_NOT_SAMPLED_PREFIX
+
+    # Safety
+    open_type = 'xb' if params['safe'] else 'wb'
 
     print_verbose('done!\n')
 
@@ -98,10 +102,15 @@ if __name__ == '__main__':
 
     # Choose indices
     all_laionindices = set()
+    key2laionindices_sampled = {}
     for key, laionindices in tqdm(key2laionindices.items()):
         sims = np.array(df.loc[laionindices, params['similarity_col']].tolist())
 
-        all_laionindices.update(np.array(laionindices)[sims > params['similarity_th']])
+        laionindices_sampled = np.array(laionindices)[sims > params['similarity_th']].tolist()
+
+        key2laionindices_sampled[key] = laionindices_sampled
+
+        all_laionindices.update(laionindices_sampled)
 
     all_laionindices = sorted(all_laionindices)
 
@@ -115,6 +124,11 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
+    # Save labels
+    with open(os.path.join(params['labels_path'], params['labels_save_file_name']), 'wb') as f:
+        pickle.dump(key2laionindices_sampled, f)
+
+    # Save df
     sampled_subset_file_name = configs.LAIONConfig.SUBSET_PREFIX \
         + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     sampled_subset_file_path = os.path.join(params['laion_path'], sampled_subset_file_name)
