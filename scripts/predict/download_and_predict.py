@@ -9,8 +9,6 @@ import pandas as pd
 from tqdm.auto import tqdm
 import torch
 
-torch.cuda.set_per_process_memory_growth(True)
-
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
@@ -47,7 +45,7 @@ def predict(args):
 
     # Init.
     ptu.device = device
-    # torch.cuda.set_per_device_memory_fraction(device, 0.2)
+    torch.cuda.set_per_process_memory_fraction(0.2, device)
 
     # Load the images
     imgs = []
