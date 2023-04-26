@@ -154,7 +154,7 @@ if __name__ == '__main__':
             ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
             ILSVRCPredictorType.IMAGENET_21K
         ])
-    if params['predictor'] == 'all':
+    if params['predictors'] == 'all':
         model_names, processors, models = select_ilsvrc_predictors([
             ILSVRCPredictorType.IMAGENET_RESNET,
             ILSVRCPredictorType.IMAGENET_VIT,
