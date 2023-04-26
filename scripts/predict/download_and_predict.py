@@ -129,6 +129,9 @@ if __name__ == '__main__':
 
     print_verbose('initializing ...')
 
+    # Compute
+    ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
+
     # Path
     os.makedirs(params['save_path'], exist_ok=True)
 

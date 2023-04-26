@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-import logging
 
 import torch
 from torch import nn
@@ -10,16 +9,14 @@ device = None
 
 def init_gpu(use_gpu=True, gpu_id=0, verbose=True):
     global device
-    logging.basicConfig(level=logging.INFO)
-
     if torch.cuda.is_available() and use_gpu:
         device = torch.device('cuda:' + str(gpu_id))
         if verbose:
-            logging.info('\tusing gpu id {}'.format(gpu_id))
+            print('\tusing gpu id {}'.format(gpu_id))
     else:
         device = torch.device('cpu')
         if verbose:
-            logging.info('\tgpu not detected, defaulting to cpu.')
+            print('\tgpu not detected, defaulting to cpu.')
 
 
 def set_device(gpu_id):
