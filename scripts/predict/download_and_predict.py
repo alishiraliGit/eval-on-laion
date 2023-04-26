@@ -44,7 +44,7 @@ def predict(args):
     idx_img_list, mdl_names, ps, mdls, mdl2label2wnid, gpu_id = args
 
     # Init.
-    ptu.init_gpu(gpu_id=gpu_id, verbose=False)
+    ptu.init_gpu(gpu_id=gpu_id, verbose=True)
 
     # Load the images
     imgs = []
