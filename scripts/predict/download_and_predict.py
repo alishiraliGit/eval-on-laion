@@ -7,6 +7,9 @@ from PIL import Image
 from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
+import torch
+
+torch.cuda.set_per_process_memory_growth(True)
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
