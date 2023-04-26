@@ -45,7 +45,6 @@ def predict(args):
 
     # Init.
     ptu.init_gpu(gpu_id=gpu_id, verbose=True)
-    print('hi\n\n')
 
     # Load the images
     imgs = []
