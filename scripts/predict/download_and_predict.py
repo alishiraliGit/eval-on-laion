@@ -107,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--queried', action='store_true')
 
     # Predictors
-    parser.add_argument('--predictors', type=str, default='test', help='test or vit')
+    parser.add_argument('--predictors', type=str, default='selected')
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=2)
@@ -148,18 +148,21 @@ if __name__ == '__main__':
     # ----- Select the models -----
     print_verbose('loading models ...')
 
-    if params['predictors'] == 'test':
+    if params['predictors'] == 'selected':
         model_names, processors, models = select_ilsvrc_predictors([
             ILSVRCPredictorType.IMAGENET_1K,
             ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
             ILSVRCPredictorType.IMAGENET_21K
         ])
-    elif params['predictors'] == 'vit':
+    if params['predictor'] == 'all':
         model_names, processors, models = select_ilsvrc_predictors([
-            ILSVRCPredictorType.IMAGENET_VIT
+            ILSVRCPredictorType.IMAGENET_RESNET,
+            ILSVRCPredictorType.IMAGENET_VIT,
+            ILSVRCPredictorType.IMAGENET_BEIT,
+            ILSVRCPredictorType.IMAGENET_CONVNEXT,
         ])
     else:
-        raise Exception('Undefined predictors!')
+        model_names, processors, models = select_ilsvrc_predictors([params['predictors']])
 
     print_verbose('done!\n')
 

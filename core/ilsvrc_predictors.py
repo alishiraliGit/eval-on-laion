@@ -1,5 +1,5 @@
 from transformers import ViTImageProcessor, ViTForImageClassification, \
-    ResNetForImageClassification, \
+    ResNetForImageClassification, AutoFeatureExtractor, \
     BeitImageProcessor, BeitForImageClassification, \
     ConvNextImageProcessor, ConvNextForImageClassification
 from utils import pytorch_utils as ptu
@@ -9,7 +9,10 @@ class ILSVRCPredictorType:
     IMAGENET_1K = 'imagenet-1k'
     IMAGENET_PT21k_FT1K = 'imagenet-pt21k-ft1k'
     IMAGENET_21K = 'imagenet-21k'
+    IMAGENET_RESNET = 'imagenet-resnet'
     IMAGENET_VIT = 'imagenet-vit'
+    IMAGENET_BEIT = 'imagenet-beit'
+    IMAGENET_CONVNEXT = 'imagenet-convnext'
 
 
 def select_ilsvrc_predictors(types):
@@ -32,10 +35,22 @@ def select_ilsvrc_predictors(types):
             model_names.extend(model_names_21k)
             processors.update(processors_21k)
             models.update(models_21k)
+        elif t == ILSVRCPredictorType.IMAGENET_RESNET:
+            model_names.extend(model_names_resnet)
+            processors.update(processors_resnet)
+            models.update(models_resnet)
         elif t == ILSVRCPredictorType.IMAGENET_VIT:
             model_names.extend(model_names_vit)
             processors.update(processors_vit)
             models.update(models_vit)
+        elif t == ILSVRCPredictorType.IMAGENET_BEIT:
+            model_names.extend(model_names_beit)
+            processors.update(processors_beit)
+            models.update(models_beit)
+        elif t == ILSVRCPredictorType.IMAGENET_CONVNEXT:
+            model_names.extend(model_names_convnext)
+            processors.update(processors_convnext)
+            models.update(models_convnext)
         else:
             raise Exception(f'Cannot find the model specified: {t}')
 
@@ -98,6 +113,28 @@ models_21k = {
 
 
 ###############
+# Other ResNet models
+###############
+model_names_resnet = [
+    'resnet-18',
+    'resnet-34',
+    'resnet-50',
+    'resnet-101',
+    'resnet-152',
+]
+
+processors_resnet = {
+    model_name: lambda: AutoFeatureExtractor.from_pretrained(f'microsoft/{model_name}')
+    for model_name in model_names_resnet
+}
+
+models_resnet = {
+    model_name: lambda: ResNetForImageClassification.from_pretrained(f'microsoft/{model_name}')
+    for model_name in model_names_resnet
+}
+
+
+###############
 # Other ViT models
 ###############
 model_names_vit = [
@@ -116,4 +153,55 @@ processors_vit = {
 models_vit = {
     model_name: lambda: ViTForImageClassification.from_pretrained(f'google/{model_name}')
     for model_name in model_names_vit
+}
+
+
+###############
+# Other BEiT models
+###############
+model_names_beit = [
+    'beit-base-patch16-224-pt22k-ft22k',
+    'beit-large-patch16-224-pt22k-ft22k',
+    'beit-base-patch16-224',
+    'beit-base-patch16-384',
+    'beit-large-patch16-224',
+    'beit-large-patch16-384'
+]
+
+processors_beit = {
+    model_name: lambda: BeitImageProcessor.from_pretrained(f'microsoft/{model_name}') for model_name in model_names_beit
+}
+
+models_beit = {
+    model_name: lambda: BeitForImageClassification.from_pretrained(f'microsoft/{model_name}')
+    for model_name in model_names_beit
+}
+
+
+###############
+# Other ConvNeXT models
+###############
+model_names_convnext = [
+    'convnext-base-224-22k',
+    'convnext-large-224-22k',
+    'convnext-tiny-224',
+    'convnext-small-224',
+    'convnext-base-224',
+    'convnext-large-224',
+    'convnext-base-384',
+    'convnext-large-384',
+    'convnext-base-224-22k-1k',
+    'convnext-large-224-22k-1k',
+    'convnext-base-384-22k-1k',
+    'convnext-large-384-22k-1k',
+]
+
+processors_convnext = {
+    model_name: lambda: ConvNextImageProcessor.from_pretrained(f'facebook/{model_name}')
+    for model_name in model_names_convnext
+}
+
+models_convnext = {
+    model_name: lambda: ConvNextForImageClassification.from_pretrained(f'facebook/{model_name}')
+    for model_name in model_names_convnext
 }
