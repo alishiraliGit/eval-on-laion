@@ -125,7 +125,7 @@ if __name__ == '__main__':
     print_verbose('saving ...')
 
     # Save labels
-    with open(os.path.join(params['labels_path'], params['labels_save_file_name']), 'wb') as f:
+    with open(os.path.join(params['labels_path'], params['labels_save_file_name']), open_type) as f:
         pickle.dump(key2laionindices_sampled, f)
 
     # Save df
