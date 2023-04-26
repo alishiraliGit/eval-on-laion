@@ -185,6 +185,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_predictions'))
 
+    # Subset
+    parser.add_argument('--from_iloc', type=int, default=0)
+    parser.add_argument('--to_iloc', type=int, default=-1)
+
     # Method
     parser.add_argument('--queried_clip_retrieval', action='store_true')
     parser.add_argument('--queried', action='store_true')
@@ -234,6 +238,12 @@ if __name__ == '__main__':
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
 
     df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+
+    # Subset
+    if params['to_iloc'] > 0:
+        df = df.iloc[params['from_iloc']: params['to_iloc']]
+    else:
+        df = df.iloc[params['from_iloc']:]
 
     print_verbose('done!\n')
 
