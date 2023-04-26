@@ -15,7 +15,7 @@ class ILSVRCPredictorType:
     IMAGENET_CONVNEXT = 'imagenet-convnext'
 
 
-def select_ilsvrc_predictors(types):
+def select_ilsvrc_predictors(types, do_init=True):
     if not isinstance(types, list):
         types = [types]
 
@@ -55,9 +55,10 @@ def select_ilsvrc_predictors(types):
             raise Exception(f'Cannot find the model specified: {t}')
 
     # Init.
-    for model_name in model_names:
-        processors[model_name] = processors[model_name]()
-        models[model_name] = models[model_name]().to(ptu.device)
+    if do_init:
+        for model_name in model_names:
+            processors[model_name] = processors[model_name]()
+            models[model_name] = models[model_name]().to(ptu.device)
 
     return model_names, processors, models
 

@@ -21,6 +21,10 @@ from core.retrieve_image import download_image_content, verify_image
 from core.ilsvrc_predictors import ILSVRCPredictorType, select_ilsvrc_predictors
 
 
+###############
+# Image download
+###############
+
 unpaused = None
 
 
@@ -39,10 +43,34 @@ def download_image_wrapper(args):
         return idx, None, {'cause': f'In downloading image of index {idx} an error occurred.', 'error': e}
 
 
+###############
+# Prediction
+###############
+
 model_names = []
 processors = []
 models = []
 model2label2wnid = {}
+
+
+def load_models(predictors, do_init):
+    global model_names, processors, models
+
+    if predictors == 'selected':
+        model_names, processors, models = select_ilsvrc_predictors([
+            ILSVRCPredictorType.IMAGENET_1K,
+            ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
+            ILSVRCPredictorType.IMAGENET_21K
+        ], do_init)
+    if predictors == 'all':
+        model_names, processors, models = select_ilsvrc_predictors([
+            ILSVRCPredictorType.IMAGENET_RESNET,
+            ILSVRCPredictorType.IMAGENET_VIT,
+            ILSVRCPredictorType.IMAGENET_BEIT,
+            ILSVRCPredictorType.IMAGENET_CONVNEXT,
+        ], do_init)
+    else:
+        model_names, processors, models = select_ilsvrc_predictors([predictors], do_init)
 
 
 def init_worker(pars):
@@ -62,21 +90,7 @@ def init_worker(pars):
     # Load the models
     print_verbose(f'loading models in worker {worker_id} ...')
 
-    if pars['predictors'] == 'selected':
-        model_names, processors, models = select_ilsvrc_predictors([
-            ILSVRCPredictorType.IMAGENET_1K,
-            ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
-            ILSVRCPredictorType.IMAGENET_21K
-        ])
-    if pars['predictors'] == 'all':
-        model_names, processors, models = select_ilsvrc_predictors([
-            ILSVRCPredictorType.IMAGENET_RESNET,
-            ILSVRCPredictorType.IMAGENET_VIT,
-            ILSVRCPredictorType.IMAGENET_BEIT,
-            ILSVRCPredictorType.IMAGENET_CONVNEXT,
-        ])
-    else:
-        model_names, processors, models = select_ilsvrc_predictors([pars['predictors']])
+    load_models(pars['predictors'], do_init=True)
 
     print_verbose('done!\n')
 
@@ -134,6 +148,14 @@ def predict(args):
         return inds, None, errs
 
 
+def dummy_func(_args):
+    return None
+
+
+###############
+# Progress monitor
+###############
+
 def num_ready_results(results):
     return sum([r.ready() for r in results])
 
@@ -147,10 +169,6 @@ def update_pred_pb(pred_pb, pred_results):
     pred_pb.total = len(pred_results)
     pred_pb.update(num_ready_results(pred_results) - latest_num_ready_results)
     latest_num_ready_results = num_ready_results(pred_results)
-
-
-def dummy_func(_args):
-    return None
 
 
 if __name__ == '__main__':
@@ -204,6 +222,9 @@ if __name__ == '__main__':
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
         prefix = configs.LAIONConfig.SUBSET_PREFIX
+
+    # Load model names
+    load_models(params['predictors'], do_init=False)
 
     print_verbose('done!\n')
 
