@@ -45,6 +45,7 @@ def predict(args):
 
     # Init.
     ptu.init_gpu(gpu_id=gpu_id, verbose=True)
+    print('hi\n\n')
 
     # Load the images
     imgs = []
@@ -251,7 +252,7 @@ if __name__ == '__main__':
             processors,
             models,
             model2label2wnid,
-            ptu.device
+            params['gpu_id']
         )]
     )
     prediction_results.append(pred_res)
