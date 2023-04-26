@@ -45,7 +45,7 @@ def predict(args):
 
     # Init.
     ptu.device = device
-    torch.cuda.set_per_process_memory_fraction(0.2, device)
+    # torch.cuda.set_per_process_memory_fraction(0.2, device)
 
     # Load the images
     imgs = []
