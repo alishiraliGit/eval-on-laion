@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import glob
 from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
@@ -26,13 +27,14 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # Sanity check
-    images_found = []
-    for i_ic, ic in tqdm(enumerate(imagenet_captions)):
-        if os.path.exists(os.path.join(images_path, ic['filename'])):
-            images_found.append(i_ic)
+    # ----- Find images with caption -----
+    file_paths = glob.glob(os.path.join(images_path, '*.JPEG'))
+    ic_file_paths = [ic['filename'] for ic in imagenet_captions]
 
-        if i_ic % 1000 == 0:
-            print_verbose(f'found {len(images_found)} so far.')
+    not_found_paths = []
+    for i_f, file_path in tqdm(enumerate(file_paths)):
+        if file_path not in ic_file_paths:
+            not_found_paths.append(not_found_paths)
 
-    print_verbose(f'found {len(images_found)} of imagenet-captions among the images.')
+        if i_f % 10000 == 0:
+            print_verbose(f'so far, could not find {len(not_found_paths)} of the images out of {i_f + 1}.')
