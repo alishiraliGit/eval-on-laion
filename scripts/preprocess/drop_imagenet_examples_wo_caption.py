@@ -1,7 +1,7 @@
 import sys
 import os
 import json
-import glob
+import shutil
 from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
@@ -14,6 +14,7 @@ if __name__ == '__main__':
     # ----- Settings -----
     imagenet_captions_path = os.path.join('ilsvrc2012', 'imagenet_captions.json')
     images_path = os.path.join('ilsvrc2012', 'ILSVRC2012_img_train')
+    selected_images_path = os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected')
 
     # ----- Init -----
     logu.verbose = True
@@ -28,11 +29,7 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Find images with caption -----
-    file_paths = glob.glob(os.path.join(images_path, '*.JPEG'))
-    file_names = [os.path.split(path)[1] for path in file_paths]
-
     ic_file_names = [ic['filename'] for ic in imagenet_captions]
 
-    intersect_file_names = set(ic_file_names).intersection(set(file_names))
-
-    print(len(intersect_file_names))
+    for file_name in tqdm(ic_file_names):
+        shutil.copy2(os.path.join(images_path, file_name), os.path.join(selected_images_path, file_name))
