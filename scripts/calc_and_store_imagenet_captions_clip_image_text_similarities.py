@@ -89,7 +89,7 @@ if __name__ == '__main__':
     texts_batch = []
     images_batch = []
     i_batch = 0
-    for i_ic, ic in tqdm(enumerate(imagenet_captions), desc='calc. image-text sim.'):
+    for i_ic, ic in tqdm(enumerate(imagenet_captions), desc='calc. image-text sim.', total=len(imagenet_captions)):
         # Make a caption
         text = ic['title'] + ' ' + ic['description']
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
         # Update
         file_names.extend(file_names_batch)
-        texts.extend(errors_batch)
+        texts.extend(texts_batch)
         similarities.extend(similarities_batch)
 
         # Save
