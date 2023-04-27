@@ -36,5 +36,5 @@ if __name__ == '__main__':
         if file_path not in ic_file_paths:
             not_found_paths.append(not_found_paths)
 
-        if i_f % 10000 == 0:
+        if i_f % 1000 == 0:
             print_verbose(f'so far, could not find {len(not_found_paths)} of the images out of {i_f + 1}.')
