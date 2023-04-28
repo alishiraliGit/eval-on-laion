@@ -62,7 +62,7 @@ def load_models(predictors, do_init):
             ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
             ILSVRCPredictorType.IMAGENET_21K
         ], do_init)
-    if predictors == 'all':
+    elif predictors == 'all':
         model_names, processors, models = select_ilsvrc_predictors([
             ILSVRCPredictorType.IMAGENET_RESNET,
             ILSVRCPredictorType.IMAGENET_VIT,
