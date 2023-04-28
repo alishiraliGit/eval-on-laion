@@ -72,6 +72,8 @@ def load_models(predictors, do_init):
     else:
         model_names, processors, models = select_ilsvrc_predictors([predictors], do_init)
 
+    return model_names, processors, models
+
 
 def init_worker(pars):
     global model_names, processors, models, model2label2wnid

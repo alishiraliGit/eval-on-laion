@@ -13,7 +13,6 @@ import configs
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import laion_utils as laionu
-from core.ilsvrc_predictors import model_names_1k, model_names_pt21k_ft1k, model_names_21k
 from scripts.predict.download_and_predict import load_models
 
 
@@ -67,7 +66,7 @@ if __name__ == '__main__':
         assert params['query_type'] is not None
 
     # Choose models
-    model_names = load_models(params['predictors'], do_init=False)
+    model_names, _, _ = load_models(params['predictors'], do_init=False)
 
     print_verbose('\tusing models:\n\t' + '\n\t'.join(model_names))
 
@@ -101,7 +100,7 @@ if __name__ == '__main__':
     elif queried:
         map_file_name = f'wnid2laionindices(query_{params["query_type"]}).pkl'
     else:
-        map_file_name = 'wnid2uniformlaionindices(substring_matched).pkl'
+        map_file_name = 'wnid2laionindices(substring_matched).pkl'
 
     with open(os.path.join(params['labels_path'], map_file_name), 'rb') as f:
         wnid2laionindices = pickle.load(f)
