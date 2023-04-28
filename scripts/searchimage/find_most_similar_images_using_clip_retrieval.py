@@ -60,6 +60,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_path', type=str, default=os.path.join('laion400m', 'processed', 'from_clip_retrieval'))
 
+    # Parse results
+    parser.add_argument('--drop_identical', action='store_true')
+
     # Method
     parser.add_argument('--queried_clip_retrieval', action='store_true')
     parser.add_argument('--queried', action='store_true')
@@ -190,7 +193,16 @@ if __name__ == '__main__':
         if index < 0:
             print_verbose(f'error caught in fetching the results: \n {str(query_results)}')
             continue
+        if isinstance(query_results, dict):
+            continue
 
+        # Drop identical
+        if params['drop_identical']:
+            url = df.loc[index, configs.LAIONConfig.URL_COL]
+            query_results = [query_res for query_res in query_results
+                             if query_res[configs.CLIPRetrievalConfig.URL_COL] != url]
+
+        # Store
         all_results[index] = query_results
 
         # Save

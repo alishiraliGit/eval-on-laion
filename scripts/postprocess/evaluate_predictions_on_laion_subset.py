@@ -14,6 +14,7 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import laion_utils as laionu
 from core.ilsvrc_predictors import model_names_1k, model_names_pt21k_ft1k, model_names_21k
+from scripts.predict.download_and_predict import load_models
 
 
 if __name__ == '__main__':
@@ -29,6 +30,9 @@ if __name__ == '__main__':
     parser.add_argument('--predictions_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'ilsvrc_predictions'))
     parser.add_argument('--predictions_ver', type=str, default='*')
+
+    # Predictors
+    parser.add_argument('--predictors', type=str, default='selected')
 
     # Method
     parser.add_argument('--queried_clip_retrieval', action='store_true')
@@ -63,9 +67,7 @@ if __name__ == '__main__':
         assert params['query_type'] is not None
 
     # Choose models
-    model_names = model_names_1k + model_names_pt21k_ft1k + model_names_21k
-    map_models = [6, 5, 0, 1, 3, 2, 4]
-    model_names = np.array(model_names)[map_models].tolist()
+    model_names = load_models(params['predictors'], do_init=False)
 
     print_verbose('\tusing models:\n\t' + '\n\t'.join(model_names))
 
