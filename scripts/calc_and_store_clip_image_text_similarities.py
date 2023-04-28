@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     # Method
     parser.add_argument('--queried_clip_retrieval', action='store_true')
-    parser.add_argument('--queried_clip_retrieval_tb', action='store_true')
+    parser.add_argument('--sm_queried_clip_retrieval', action='store_true')
     parser.add_argument('--queried', action='store_true')
 
     # Multiprocessing
@@ -94,8 +94,8 @@ if __name__ == '__main__':
     # Set the files prefix
     if params['queried_clip_retrieval']:
         prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
-    elif params['queried_clip_retrieval_tb']:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_TB_PREFIX
+    elif params['sm_queried_clip_retrieval']:
+        prefix = configs.LAIONConfig.SUBSET_SM_CLIP_RETRIEVAL_TB_PREFIX
     elif params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
