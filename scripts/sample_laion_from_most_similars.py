@@ -28,8 +28,8 @@ if __name__ == '__main__':
     parser.add_argument('--labels_save_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
 
     # Filtering
-    parser.add_argument('--similarity_col', type=str, default='text_to_a_photo_of_name_def_wnid_similarity')
-    parser.add_argument('--similarity_th', type=float, default=0.805)
+    parser.add_argument('--similarity_col', type=str, default='text_to_name_def_wnid_similarity')
+    parser.add_argument('--similarity_th', type=float, default=0.82, help='formerly, 0.805')
 
     parser.add_argument('--remove_nsfw', action='store_true')
 

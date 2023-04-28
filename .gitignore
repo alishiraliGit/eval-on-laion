@@ -30,3 +30,4 @@ del
 from_clip_retrieval
 ilsvrc2012/processed/predictions
 imagenet_captions.json
+imagenet_captions.parquet
