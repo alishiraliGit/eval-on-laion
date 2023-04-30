@@ -17,8 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
-    parser.add_argument('--imagenet_captions_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'imagenet_captions.json'))
+    parser.add_argument('--load_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.json'))
     parser.add_argument('--save_path', type=str, default=os.path.join('ilsvrc2012'))
 
     # Logging

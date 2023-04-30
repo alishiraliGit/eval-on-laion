@@ -1,6 +1,6 @@
+import pickle
 import sys
 import os
-import json
 import argparse
 from PIL import Image
 import numpy as np
@@ -33,9 +33,8 @@ if __name__ == '__main__':
 
     # Path
     parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected'))
-    parser.add_argument('--imagenet_captions_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'imagenet_captions.json'))
-    parser.add_argument('--save_path', type=str, default=os.path.join('ilsvrc2012'))
+    parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.parquet'))
+    parser.add_argument('--index2filename_path', type=str, default=None)
 
     # Compute
     parser.add_argument('--no_gpu', action='store_true')
@@ -57,8 +56,6 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Naming
-    prefix = 'imagenet_captions'
-    df_file_name = prefix + '.parquet'
     image_to_text_sim_col = 'image_to_text_similarity'
 
     print_verbose('done!\n')
@@ -70,43 +67,56 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Load imagenet-captions -----
-    print_verbose('loading imagenet-captions ...')
+    # ----- Load dataframe -----
+    print_verbose('loading dataframe ...')
 
-    with open(params['imagenet_captions_path'], 'rb') as f:
-        imagenet_captions = json.load(f)
+    df = pd.read_parquet(params['dataframe_path'])
+
+    print_verbose('done!\n')
+
+    # ----- Load the map to files -----
+    print_verbose('loading index2filename map ...')
+
+    if params['index2filename_path'] is None:
+        print_verbose('\tdefaulting to identical map ...')
+        index2filename = {idx: idx for idx in df.index}
+    else:
+        with open(params['index2filename_path'], 'rb') as f:
+            index2filename = pickle.load(f)
 
     print_verbose('done!\n')
 
     # ----- Collect downloads and calc. embeddings -----
     # Init.
-    file_names = []
-    texts = []
+    indices = []
     similarities = []
     errors = []
 
-    file_names_batch = []
+    indices_batch = []
     texts_batch = []
     images_batch = []
     i_batch = 0
-    for i_ic, ic in tqdm(enumerate(imagenet_captions), desc='calc. image-text sim.', total=len(imagenet_captions)):
-        # Make a caption
-        text = ic['title'] + ' ' + ic['description']
+    i_row = -1
+    for idx, row in tqdm(df.iterrows(), desc='calc. image-text sim.', total=len(df)):
+        i_row += 1
+
+        # Parse
+        file_name = index2filename[idx]
+        text = row[configs.LAIONConfig.TEXT_COL]
 
         # Load the image
-        file_name = ic['filename']
         file_path = os.path.join(params['images_path'], file_name)
         image = Image.open(file_path)
 
-        if image.mode != 'RGB':
+        if image.mode == 'RGB':
+            # Add to the batch
+            indices_batch.append(idx)
+            texts_batch.append(text)
+            images_batch.append(image)
+
+        if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df) - 1):
             continue
-
-        # Add to the batch
-        file_names_batch.append(file_name)
-        texts_batch.append(text)
-        images_batch.append(image)
-
-        if len(images_batch) < configs.CLIPConfig.BATCH_SIZE and i_ic < len(imagenet_captions):
+        if len(indices_batch) == 0:
             continue
 
         # Calc. embeddings
@@ -118,28 +128,21 @@ if __name__ == '__main__':
             errors.append(str(error['error']))
 
         # Update
-        file_names.extend(file_names_batch)
-        texts.extend(texts_batch)
+        indices.extend(indices_batch)
         similarities.extend(similarities_batch)
 
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
 
-            df = pd.DataFrame(
-                {
-                    configs.LAIONConfig.TEXT_COL: texts,
-                    image_to_text_sim_col: similarities
-                },
-                index=file_names
-            )
+            df.loc[indices, image_to_text_sim_col] = similarities
 
-            df.to_parquet(os.path.join(params['save_path'], df_file_name), index=True)
+            df.to_parquet(params['dataframe_path'], index=True)
 
             print_verbose('done!\n')
 
-        # Empty current batch
-        file_names_batch = []
+        # Step
+        indices_batch = []
         texts_batch = []
         images_batch = []
         i_batch += 1
@@ -147,22 +150,16 @@ if __name__ == '__main__':
     # ----- Save ------
     print_verbose('saving error logs ....')
 
-    err_file_name = df_file_name.replace('.parquet', '_errors.txt')
-    with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
+    err_file_path = params['dataframe_path'].replace('.parquet', '_errors.txt')
+    with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
     print_verbose('done!\n')
 
     print_verbose('saving ....')
 
-    df = pd.DataFrame(
-        {
-            configs.LAIONConfig.TEXT_COL: texts,
-            image_to_text_sim_col: similarities
-        },
-        index=file_names
-    )
+    df.loc[indices, image_to_text_sim_col] = similarities
 
-    df.to_parquet(os.path.join(params['save_path'], df_file_name), index=True)
+    df.to_parquet(params['dataframe_path'], index=True)
 
     print_verbose('done!\n')
