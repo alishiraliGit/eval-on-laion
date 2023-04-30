@@ -209,14 +209,16 @@ if __name__ == '__main__':
         if error is not None:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
-            continue
+        else:
+            # Get the queries
+            text = df.loc[index, query_col]
 
-        # Get the queries
-        text = df.loc[index, query_col]
+            # Append the downloaded image to the batch
+            download_ready_results.append([index, image_content, text])
 
-        # Append the downloaded image to the batch
-        download_ready_results.append([index, image_content, text])
         if len(download_ready_results) < configs.CLIPConfig.BATCH_SIZE and i_res < (len(df) - 1):
+            continue
+        if len(download_ready_results) == 0:
             continue
 
         # Calc. embeddings
