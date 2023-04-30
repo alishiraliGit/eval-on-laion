@@ -125,12 +125,12 @@ model_names_resnet = [
 ]
 
 processors_resnet = {
-    model_name: lambda: AutoFeatureExtractor.from_pretrained(f'microsoft/{model_name}')
+    model_name: lambda name=model_name: AutoFeatureExtractor.from_pretrained(f'microsoft/{name}')
     for model_name in model_names_resnet
 }
 
 models_resnet = {
-    model_name: lambda: ResNetForImageClassification.from_pretrained(f'microsoft/{model_name}')
+    model_name: lambda name=model_name: ResNetForImageClassification.from_pretrained(f'microsoft/{name}')
     for model_name in model_names_resnet
 }
 
@@ -148,11 +148,12 @@ model_names_vit = [
 ]
 
 processors_vit = {
-    model_name: lambda: ViTImageProcessor.from_pretrained(f'google/{model_name}') for model_name in model_names_vit
+    model_name: lambda name=model_name: ViTImageProcessor.from_pretrained(f'google/{name}')
+    for model_name in model_names_vit
 }
 
 models_vit = {
-    model_name: lambda: ViTForImageClassification.from_pretrained(f'google/{model_name}')
+    model_name: lambda name=model_name: ViTForImageClassification.from_pretrained(f'google/{name}')
     for model_name in model_names_vit
 }
 
@@ -170,11 +171,12 @@ model_names_beit = [
 ]
 
 processors_beit = {
-    model_name: lambda: BeitImageProcessor.from_pretrained(f'microsoft/{model_name}') for model_name in model_names_beit
+    model_name: lambda name=model_name: BeitImageProcessor.from_pretrained(f'microsoft/{name}')
+    for model_name in model_names_beit
 }
 
 models_beit = {
-    model_name: lambda: BeitForImageClassification.from_pretrained(f'microsoft/{model_name}')
+    model_name: lambda name=model_name: BeitForImageClassification.from_pretrained(f'microsoft/{name}')
     for model_name in model_names_beit
 }
 
@@ -198,11 +200,11 @@ model_names_convnext = [
 ]
 
 processors_convnext = {
-    model_name: lambda: ConvNextImageProcessor.from_pretrained(f'facebook/{model_name}')
+    model_name: lambda name=model_name: ConvNextImageProcessor.from_pretrained(f'facebook/{name}')
     for model_name in model_names_convnext
 }
 
 models_convnext = {
-    model_name: lambda: ConvNextForImageClassification.from_pretrained(f'facebook/{model_name}')
+    model_name: lambda name=model_name: ConvNextForImageClassification.from_pretrained(f'facebook/{name}')
     for model_name in model_names_convnext
 }
