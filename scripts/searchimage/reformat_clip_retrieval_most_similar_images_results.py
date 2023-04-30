@@ -149,19 +149,19 @@ if __name__ == '__main__':
     # Save labels
     print_verbose(f'\tsaving distinct {len(wnid2crindices)} labels.')
 
-    with open(os.path.join(params['labels_path'], 'wnid2sbcrindices.pkl'), open_type) as f:
+    with open(os.path.join(params['labels_path'], 'wnid2smcrindices.pkl'), open_type) as f:
         pickle.dump(wnid2crindices, f)
 
     # Save similarities
     print_verbose(f'\tsaving image to image similarities.')
 
-    with open(os.path.join(params['labels_path'], 'wnid2sbcrimgimgsims.pkl'), open_type) as f:
+    with open(os.path.join(params['labels_path'], 'wnid2smcrimgimgsims.pkl'), open_type) as f:
         pickle.dump(wnid2crsims, f)
 
     # Save df
     print_verbose(f'\tsaving df with {len(df)} rows.')
 
-    prefix = configs.LAIONConfig.SUBSET_SM_CLIP_RETRIEVAL_TB_PREFIX
+    prefix = configs.LAIONConfig.SUBSET_SM_CLIP_RETRIEVAL_PREFIX
     # For compatibility only
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, configs.LAIONConfig.NUM_PARTS - 1)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)

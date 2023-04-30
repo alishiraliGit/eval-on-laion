@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--not_sampled', action='store_true')
 
     # Query
-    parser.add_argument('--query_type', type=str, default=QueryType.A_PHOTO_OF_NAME_DEF)
+    parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
     parser.add_argument('--query_key', type=str, help='wnid or lemma')
 
     # Compute

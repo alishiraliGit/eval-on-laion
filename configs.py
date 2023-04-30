@@ -45,7 +45,7 @@ class LAIONConfig:
     SUBSET_NOT_SAMPLED_PREFIX = 'subset_all_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
     SUBSET_CLIP_RETRIEVAL_PREFIX = 'subset_cr_'
-    SUBSET_SM_CLIP_RETRIEVAL_TB_PREFIX = 'subset_sb_cr_'
+    SUBSET_SM_CLIP_RETRIEVAL_PREFIX = 'subset_sb_cr_'
     PREDICTED_PREFIX = 'predicted_'
 
 

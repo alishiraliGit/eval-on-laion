@@ -3,6 +3,7 @@ import os
 import multiprocessing
 import time
 import argparse
+import pickle
 from PIL import Image
 from io import BytesIO
 import numpy as np
@@ -18,6 +19,7 @@ from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
 from core.retrieve_image import download_image_content, verify_image
 from core.clip import CLIP
+from core.queries import select_queries, QueryType
 
 
 def download_image_wrapper(args):
@@ -64,10 +66,16 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
 
+    parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
+    parser.add_argument('--labels_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
+
     # Method
     parser.add_argument('--queried_clip_retrieval', action='store_true')
     parser.add_argument('--sm_queried_clip_retrieval', action='store_true')
     parser.add_argument('--queried', action='store_true')
+
+    # Query
+    parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
@@ -101,6 +109,13 @@ if __name__ == '__main__':
     else:
         prefix = configs.LAIONConfig.SUBSET_PREFIX
 
+    # Query
+    query_func = select_queries([params['query_type']])[0]
+
+    # Column names
+    query_col = params['query_type'] + '_' + params['query_key']
+    image_to_query_sim_col = f'image_to_{query_col}_similarity'
+
     print_verbose('done!\n')
 
     # ----- Init. CLIP -----
@@ -110,24 +125,68 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Load dataframe -----
-    print_verbose('loading and preprocessing dataframe ...')
+    # ----- Loading labels -----
+    print_verbose('loading labels ...')
 
-    # Load
+    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
+        wnid2laionindices = pickle.load(f)
+
+    print_verbose('done!\n')
+
+    # ----- Find the inverse map -----
+    print_verbose('finding inverse map ...')
+
+    laionindex2wnids = {}
+    for wnid, laion_indices in wnid2laionindices.items():
+        for laion_idx in laion_indices:
+            if laion_idx not in laionindex2wnids:
+                laionindex2wnids[laion_idx] = []
+            laionindex2wnids[laion_idx].append(wnid)
+
+    print_verbose('done!\n')
+
+    # ----- Load dataframe -----
+    print_verbose('loading dataframe ...')
+
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_name = prefix + file_name_wo_prefix
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
 
-    # Preprocess
-    df[configs.LAIONConfig.TEXT_COL] = df[configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR)
+    print_verbose('done!\n')
 
-    image_to_text_sim_col = 'image_to_text_similarity'
-    if image_to_text_sim_col not in df:
-        df[image_to_text_sim_col] = np.nan
+    # ----- Preprocess -----
+    print_verbose('preprocess ...')
 
-    df_todo = df.iloc[np.isnan(df[image_to_text_sim_col].tolist())]
+    # Drop rows with multiple labels
+    selected_laion_indices = [laion_idx for laion_idx, wnids in laionindex2wnids.items() if len(wnids) == 1]
+
+    df = df.loc[selected_laion_indices]
+
+    # Create a new column
+    if image_to_query_sim_col not in df:
+        df[image_to_query_sim_col] = np.nan
+
+    # Find rows w/o similarity
+    df_todo = df.iloc[np.isnan(df[image_to_query_sim_col].tolist())]
+
+    print_verbose('done!\n')
+
+    # ----- Design queries -----
+    print_verbose('design query ...')
+
+    laionindex2query = {}
+    for laionindex, wnids in laionindex2wnids.items():
+        if len(wnids) > 1:
+            continue
+
+        wnid = wnids[0]
+
+        laionindex2query[laionindex] = query_func(wnid)
+
+    # Add to df
+    df[query_col] = df.index.map(laionindex2query)
 
     print_verbose('done!\n')
 
@@ -152,8 +211,8 @@ if __name__ == '__main__':
             errors.append(str(error['error']))
             continue
 
-        # Get the text
-        text = df.loc[index, configs.LAIONConfig.TEXT_COL]
+        # Get the queries
+        text = df.loc[index, df.loc[index, query_col]]
 
         # Append the downloaded image to the batch
         download_ready_results.append([index, image_content, text])
@@ -168,7 +227,7 @@ if __name__ == '__main__':
             errors.append(str(error['error']))
 
         # Update df
-        df.loc[indices_batch, image_to_text_sim_col] = similarities_batch
+        df.loc[indices_batch, image_to_query_sim_col] = similarities_batch
 
         # Save
         if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df_todo) - 1):
@@ -191,7 +250,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = subset_file_path.replace('parquet', 'imgtxtsim_errors.txt')
+    err_file_path = subset_file_path.replace('parquet', 'imgquerysim_errors.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
