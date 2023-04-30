@@ -14,7 +14,7 @@ from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils.ilsvrc_utils import load_lemmas_and_wnids
 from utils import hugging_face_utils as hfu
-from core.ilsvrc_predictors import ILSVRCPredictorType, select_ilsvrc_predictors
+from scripts.predict.download_and_predict import load_models
 
 
 if __name__ == '__main__':
@@ -27,6 +27,9 @@ if __name__ == '__main__':
     parser.add_argument('--ilsvrc_synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
     parser.add_argument('--save_path', type=str, default=os.path.join('ilsvrc2012', 'processed', 'predictions'))
+
+    # Predictors
+    parser.add_argument('--predictors', type=str, default='selected')
 
     # Compute
     parser.add_argument('--no_gpu', action='store_true')
@@ -54,11 +57,7 @@ if __name__ == '__main__':
     # ----- Select the models -----
     print_verbose('loading models ...')
 
-    model_names, processors, models = select_ilsvrc_predictors([
-        ILSVRCPredictorType.IMAGENET_1K,
-        ILSVRCPredictorType.IMAGENET_PT21k_FT1K,
-        ILSVRCPredictorType.IMAGENET_21K
-    ])
+    model_names, processors, models = load_models(params['predictors'], do_init=True)
 
     print_verbose('done!\n')
 
