@@ -72,6 +72,10 @@ if __name__ == '__main__':
 
     df = pd.read_parquet(params['dataframe_path'])
 
+    # Create a new column
+    if image_to_text_sim_col not in df:
+        df[image_to_text_sim_col] = np.nan
+
     print_verbose('done!\n')
 
     # ----- Load the map to files -----
