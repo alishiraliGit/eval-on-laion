@@ -136,8 +136,10 @@ if __name__ == '__main__':
             print_verbose('saving ....')
 
             df.loc[indices, image_to_text_sim_col] = similarities
-
             df.to_parquet(params['dataframe_path'], index=True)
+
+            indices = []
+            similarities = []
 
             print_verbose('done!\n')
 
@@ -156,10 +158,12 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    print_verbose('saving ....')
+    print_verbose('saving updated dataframe ....')
 
-    df.loc[indices, image_to_text_sim_col] = similarities
-
-    df.to_parquet(params['dataframe_path'], index=True)
+    if len(indices) > 0:
+        df.loc[indices, image_to_text_sim_col] = similarities
+        df.to_parquet(params['dataframe_path'], index=True)
+    else:
+        print_verbose('\talready saved!')
 
     print_verbose('done!\n')
