@@ -29,7 +29,7 @@ val_img_embeddings.pkl
 del
 from_clip_retrieval
 ilsvrc2012/processed/predictions
+ilsvrc2012/processed/labels
 imagenet_captions.json
 imagenet_captions.parquet
-ilsvrc_val_set_predicted.csv
-ilsvrc_val_set_image_query_similarities.parquet
+ILSVRC2012_val.parquet
