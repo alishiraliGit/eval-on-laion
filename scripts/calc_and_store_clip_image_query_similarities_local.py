@@ -1,7 +1,7 @@
-import pickle
 import sys
 import os
 import argparse
+import pickle
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -14,17 +14,7 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from core.clip import CLIP
-
-
-def calc_image_to_text_similarities(imgs, txts, clip_mdl: CLIP):
-    # Calc. similarities
-    errs = []
-    try:
-        sims = clip_mdl.similarities(texts=txts, images=imgs)
-        return sims, errs
-    except Exception as e:
-        errs.append({'cause': 'In calc. image-text similarities an error occurred.', 'error': e})
-        return [np.nan]*len(imgs), errs
+from core.queries import select_queries, QueryType
 
 
 if __name__ == '__main__':
@@ -32,9 +22,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
-    parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected'))
+    parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_val'))
     parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.parquet'))
     parser.add_argument('--index2filename_path', type=str, default=None)
+
+    parser.add_argument('--index2wnid_path', type=str,
+                        default=os.path.join('ilsvrc2012', 'processed', 'imagename2wnid.pkl'))
+
+    # Query
+    parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
 
     # Compute
     parser.add_argument('--no_gpu', action='store_true')
@@ -55,8 +51,12 @@ if __name__ == '__main__':
     # Compute
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
-    # Naming
-    image_to_text_sim_col = 'image_to_text_similarity'
+    # Query
+    query_func = select_queries([params['query_type']])[0]
+
+    # Column names
+    query_col = params['query_type'] + '_' + 'wnid'
+    image_to_query_sim_col = f'image_to_{query_col}_similarity'
 
     print_verbose('done!\n')
 
@@ -73,11 +73,31 @@ if __name__ == '__main__':
     df = pd.read_parquet(params['dataframe_path'])
 
     # Create a new column
-    if image_to_text_sim_col not in df:
-        df[image_to_text_sim_col] = np.nan
+    if image_to_query_sim_col not in df:
+        df[image_to_query_sim_col] = np.nan
 
     # Find rows w/o similarity
-    df_todo = df.iloc[np.isnan(df[image_to_text_sim_col].tolist())]
+    df_todo = df.iloc[np.isnan(df[image_to_query_sim_col].tolist())]
+
+    print_verbose('done!\n')
+
+    # ----- Load labels -----
+    print_verbose('loading labels ...')
+
+    with open(os.path.join(params['index2wnid_path']), 'rb') as f:
+        index2wnid = pickle.load(f)
+
+    print_verbose('done!\n')
+
+    # ----- Design queries -----
+    print_verbose('design queries ...')
+
+    index2query = {}
+    for idx, wnid in index2wnid.items():
+        index2query[idx] = query_func(wnid)
+
+    # Add to df
+    df[query_col] = df.index.map(index2query)
 
     print_verbose('done!\n')
 
@@ -93,81 +113,62 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Collect downloads and calc. embeddings -----
-    # Init.
-    indices = []
-    similarities = []
-    errors = []
+    # ----- Load and calc. similarity -----
+    all_indices = []
+    all_similarities = []
 
     indices_batch = []
-    texts_batch = []
     images_batch = []
     i_batch = 0
     i_row = -1
-    for idx, row in tqdm(df_todo.iterrows(), desc='calc. image-text sim.', total=len(df_todo)):
+    for idx, row in tqdm(df_todo.iterrows(), desc='calc. image-query sim.', total=len(df_todo)):
         i_row += 1
 
-        # Parse
-        file_name = index2filename[idx]
-        text = row[configs.LAIONConfig.TEXT_COL]
-
         # Load the image
+        file_name = index2filename[idx]
         file_path = os.path.join(params['images_path'], file_name)
         image = Image.open(file_path)
 
         if image.mode == 'RGB':
-            # Add to the batch
             indices_batch.append(idx)
-            texts_batch.append(text)
             images_batch.append(image)
 
-        if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
+        if len(indices_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
             continue
         if len(indices_batch) == 0:
             continue
 
-        # Calc. embeddings
-        similarities_batch, errors_batch = \
-            calc_image_to_text_similarities(images_batch, texts_batch, clip)
+        # Get the queries
+        queries_batch = df.loc[indices_batch, query_col].tolist()
 
-        for error in errors_batch:
-            errors.append('\n' + error['cause'])
-            errors.append(str(error['error']))
-
-        # Update
-        indices.extend(indices_batch)
-        similarities.extend(similarities_batch)
+        # Find image-to-query similarities
+        similarities_batch = clip.similarities(texts=queries_batch, images=images_batch)
 
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
-            df.loc[indices, image_to_text_sim_col] = similarities
+
+            df.loc[all_indices, image_to_query_sim_col] = all_similarities
             df.to_parquet(params['dataframe_path'], index=True)
 
-            indices = []
-            similarities = []
+            all_indices = []
+            all_similarities = []
 
             print_verbose('done!\n')
 
         # Step
-        indices_batch = []
-        texts_batch = []
+        all_indices.extend(indices_batch)
+        all_similarities.extend(similarities_batch)
+
         images_batch = []
+        indices_batch = []
         i_batch += 1
 
-    # ----- Save ------
-    print_verbose('saving error logs ....')
+    # ----- Save error logs ------
+    print_verbose('saving ....')
 
-    err_file_path = params['dataframe_path'].replace('.parquet', '_imgtxtsim_errors.txt')
-    with open(err_file_path, 'w') as f:
-        f.write('\n'.join(errors))
-
-    print_verbose('done!\n')
-
-    print_verbose('saving updated dataframe ....')
-
-    if len(indices) > 0:
-        df.loc[indices, image_to_text_sim_col] = similarities
+    if len(all_indices) > 0:
+        df.loc[all_indices, image_to_query_sim_col] = all_similarities
         df.to_parquet(params['dataframe_path'], index=True)
     else:
         print_verbose('\talready saved!')
