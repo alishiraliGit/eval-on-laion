@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--index2filename_path', type=str, default=None)
 
     parser.add_argument('--index2wnid_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'processed', 'labels', 'imagename2wnid.pkl'))
+                        default=os.path.join('ilsvrc2012', 'processed', 'labels', 'icimagename2wnid.pkl'))
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
@@ -140,9 +140,6 @@ if __name__ == '__main__':
 
         # Get the queries
         queries_batch = df.loc[indices_batch, query_col].tolist()
-
-        # TODO
-        print(queries_batch)
 
         # Find image-to-query similarities
         similarities_batch = clip.similarities(texts=queries_batch, images=images_batch)
