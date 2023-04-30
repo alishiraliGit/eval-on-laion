@@ -141,6 +141,9 @@ if __name__ == '__main__':
         # Get the queries
         queries_batch = df.loc[indices_batch, query_col].tolist()
 
+        # TODO
+        print(queries_batch)
+
         # Find image-to-query similarities
         similarities_batch = clip.similarities(texts=queries_batch, images=images_batch)
 
