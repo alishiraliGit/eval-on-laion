@@ -3,6 +3,7 @@ import os
 import time
 import argparse
 from PIL import Image
+import pickle
 import pandas as pd
 from tqdm.auto import tqdm
 
@@ -23,6 +24,8 @@ if __name__ == '__main__':
 
     # Path
     parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_val'))
+    parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_val.parquet'))
+    parser.add_argument('--index2filename_path', type=str, default=None)
 
     parser.add_argument('--ilsvrc_synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
@@ -77,21 +80,45 @@ if __name__ == '__main__':
 
         print_verbose('done!\n')
 
+    # ----- Load dataframe -----
+    print_verbose('loading dataframe ...')
+
+    df = pd.read_parquet(params['dataframe_path'])
+
+    print_verbose('done!\n')
+
+    # ----- Load the map to files -----
+    print_verbose('loading index2filename map ...')
+
+    if params['index2filename_path'] is None:
+        print_verbose('\tdefaulting to identical map ...')
+        index2filename = {idx: idx for idx in df.index}
+    else:
+        with open(params['index2filename_path'], 'rb') as f:
+            index2filename = pickle.load(f)
+
+    print_verbose('done!\n')
+
     # ----- Collect downloads and predict -----
     images_batch = []
     indices_batch = []
     model2pred = {model_name: None for model_name in model_names}
-    for idx in tqdm(range(1, configs.ILSVRCConfigs.NUM_VAL + 1)):
+    i_row = -1
+    for idx, row in tqdm(df.iterrows(), desc='load and predict', total=len(df)):
+        i_row += 1
+
         # Load the image
-        image = Image.open(os.path.join(params['images_path'], 'ILSVRC2012_val_%08d.JPEG' % idx))
+        file_name = index2filename[idx]
+        file_path = os.path.join(params['images_path'], file_name)
+        image = Image.open(file_path)
 
-        if image.mode != 'RGB':
+        if image.mode == 'RGB':
+            images_batch.append(image)
+            indices_batch.append(idx)
+
+        if len(indices_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and i_row < (len(df) - 1):
             continue
-
-        images_batch.append(image)
-        indices_batch.append(idx)
-
-        if len(images_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and idx < configs.ILSVRCConfigs.NUM_VAL:
+        if len(indices_batch) == 0:
             continue
 
         # Predict
@@ -122,7 +149,7 @@ if __name__ == '__main__':
 
     time_str = time.strftime('%d-%m-%Y_%H-%M-%S')
 
-    prefix = 'ilsvrc_val_set_'
+    prefix = os.path.split(params['dataframe_path'])[1].replace('.parquet', '_')
 
     for model_name in model_names:
         pred_file_name = prefix + f'{model_name}_predictions_{time_str}.csv'

@@ -133,7 +133,7 @@ if __name__ == '__main__':
             indices_batch.append(idx)
             images_batch.append(image)
 
-        if len(indices_batch) < configs.ILSVRCPredictorsConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
+        if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
             continue
         if len(indices_batch) == 0:
             continue
