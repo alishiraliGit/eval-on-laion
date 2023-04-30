@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # ----- Load imagenet-captions -----
     print_verbose('loading imagenet-captions ...')
 
-    with open(params['imagenet_captions_path'], 'rb') as f:
+    with open(params['load_path'], 'rb') as f:
         imagenet_captions = json.load(f)
 
     print_verbose('done!\n')
