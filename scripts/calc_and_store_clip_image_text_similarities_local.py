@@ -135,6 +135,9 @@ if __name__ == '__main__':
         indices.extend(indices_batch)
         similarities.extend(similarities_batch)
 
+        # TODO
+        print(len(indices), len(similarities))
+
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
