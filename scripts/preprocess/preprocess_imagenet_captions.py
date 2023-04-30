@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import argparse
+import pickle
 import pandas as pd
 from tqdm.auto import tqdm
 
@@ -18,7 +19,8 @@ if __name__ == '__main__':
 
     # Path
     parser.add_argument('--load_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.json'))
-    parser.add_argument('--save_path', type=str, default=os.path.join('ilsvrc2012'))
+    parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012'))
+    parser.add_argument('--labels_path', type=str, default=os.path.join('ilsvrc2012', 'processed', 'labels'))
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -30,6 +32,10 @@ if __name__ == '__main__':
     logu.verbose = params['verbose']
 
     print_verbose('initializing ...')
+
+    # Path
+    os.makedirs(params['dataframe_path'], exist_ok=True)
+    os.makedirs(params['labels_path'], exist_ok=True)
 
     # Naming
     prefix = 'imagenet_captions'
@@ -48,6 +54,7 @@ if __name__ == '__main__':
     # ----- Loop over data -----
     texts = []
     image_names = []
+    imagename2wnid = {}
     for i_ic, ic in tqdm(enumerate(imagenet_captions), desc='preprocess', total=len(imagenet_captions)):
         # Make a caption
         text = ' '.join([ic['title']] + ic['tags'] + [ic['description']])
@@ -56,8 +63,13 @@ if __name__ == '__main__':
         texts.append(text)
         image_names.append(ic['filename'])
 
+        # Read WNID
+        wnid = ic['wnid']
+        imagename2wnid[ic['filename']] = wnid
+
     # ----- Save ------
-    print_verbose('saving ....')
+    # Dataframe
+    print_verbose('saving dataframe ....')
 
     df = pd.DataFrame(
         {
@@ -70,6 +82,14 @@ if __name__ == '__main__':
     df.index.name = 'ic_index'
     df = df.groupby('ic_index').first()
 
-    df.to_parquet(os.path.join(params['save_path'], df_file_name), index=True)
+    df.to_parquet(os.path.join(params['dataframe_path'], df_file_name), index=True)
+
+    print_verbose('done!\n')
+
+    # Labels
+    print_verbose('saving labels ....')
+
+    with open(os.path.join(params['labels_path'], 'icimagename2wnid.pkl'), 'wb') as f:
+        pickle.dump(imagename2wnid, f)
 
     print_verbose('done!\n')
