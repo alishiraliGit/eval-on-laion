@@ -66,6 +66,10 @@ if __name__ == '__main__':
         index=image_names
     )
 
+    # Drop duplicates
+    df.index.name = 'ic_index'
+    df = df.groupby('ic_index').first()
+
     df.to_parquet(os.path.join(params['save_path'], df_file_name), index=True)
 
     print_verbose('done!\n')

@@ -138,8 +138,6 @@ if __name__ == '__main__':
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
-            print(indices[:10])
-            print(similarities[:10])
             df.loc[indices, image_to_text_sim_col] = similarities
             df.to_parquet(params['dataframe_path'], index=True)
 
