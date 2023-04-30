@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--index2filename_path', type=str, default=None)
 
     parser.add_argument('--index2wnid_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'processed', 'imagename2wnid.pkl'))
+                        default=os.path.join('ilsvrc2012', 'processed', 'labels', 'imagename2wnid.pkl'))
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
