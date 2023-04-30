@@ -76,6 +76,9 @@ if __name__ == '__main__':
     if image_to_text_sim_col not in df:
         df[image_to_text_sim_col] = np.nan
 
+    # Find rows w/o similarity
+    df_todo = df.iloc[np.isnan(df[image_to_text_sim_col].tolist())]
+
     print_verbose('done!\n')
 
     # ----- Load the map to files -----
@@ -101,7 +104,7 @@ if __name__ == '__main__':
     images_batch = []
     i_batch = 0
     i_row = -1
-    for idx, row in tqdm(df.iterrows(), desc='calc. image-text sim.', total=len(df)):
+    for idx, row in tqdm(df_todo.iterrows(), desc='calc. image-text sim.', total=len(df_todo)):
         i_row += 1
 
         # Parse
@@ -118,7 +121,7 @@ if __name__ == '__main__':
             texts_batch.append(text)
             images_batch.append(image)
 
-        if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df) - 1):
+        if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
             continue
         if len(indices_batch) == 0:
             continue
