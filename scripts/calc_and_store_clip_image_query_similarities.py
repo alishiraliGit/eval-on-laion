@@ -174,7 +174,7 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Design queries -----
-    print_verbose('design query ...')
+    print_verbose('design queries ...')
 
     laionindex2query = {}
     for laionindex, wnids in laionindex2wnids.items():
@@ -212,7 +212,7 @@ if __name__ == '__main__':
             continue
 
         # Get the queries
-        text = df.loc[index, df.loc[index, query_col]]
+        text = df.loc[index, query_col]
 
         # Append the downloaded image to the batch
         download_ready_results.append([index, image_content, text])
