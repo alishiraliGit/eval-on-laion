@@ -32,4 +32,5 @@ ilsvrc2012/processed/predictions
 ilsvrc2012/processed/labels
 imagenet_captions.json
 imagenet_captions.parquet
+imagenet_captions_imgtxtsim_errors.txt
 ILSVRC2012_val.parquet
