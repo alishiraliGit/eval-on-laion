@@ -113,7 +113,7 @@ if __name__ == '__main__':
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    query_col = params['query_type']
+    query_col = params['query_type'] + '_' + 'wnid'
     image_to_query_sim_col = f'image_to_{query_col}_similarity'
 
     print_verbose('done!\n')
