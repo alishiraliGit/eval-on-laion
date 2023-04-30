@@ -31,3 +31,5 @@ from_clip_retrieval
 ilsvrc2012/processed/predictions
 imagenet_captions.json
 imagenet_captions.parquet
+ilsvrc_val_set_predicted.csv
+ilsvrc_val_set_image_query_similarities.parquet
