@@ -105,9 +105,9 @@ if __name__ == '__main__':
     if params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     elif params['not_sampled']:
-        prefix = configs.LAIONConfig.SUBSET_NOT_SAMPLED_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)

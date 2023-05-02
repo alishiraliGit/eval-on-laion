@@ -65,9 +65,9 @@ if __name__ == '__main__':
     if params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     elif params['not_sampled']:
-        prefix = configs.LAIONConfig.SUBSET_NOT_SAMPLED_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
 
     # Query
     query_func = select_queries([params['query_type']])[0]

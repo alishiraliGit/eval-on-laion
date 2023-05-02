@@ -55,11 +55,11 @@ if __name__ == '__main__':
 
     # Set the files prefix
     if queried_cr:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
     elif queried:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
 
     # Assertion
     if queried:

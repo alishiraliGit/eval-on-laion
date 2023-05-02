@@ -14,14 +14,14 @@ class FaissIndex:
         self.faiss_index = faiss_index
         self.indices = indices
 
-    def search(self, embed, k):
+    def search(self, embeds, k):
         # Search the index
-        cos_sims, faiss_indices = self.faiss_index.search(embed, k)
+        cos_sims, faiss_indices = self.faiss_index.search(embeds, k)
 
         # Map the indices
-        mapped_indices = self.indices[faiss_indices[0]]
+        mapped_indices = np.array([self.indices[f_indices_i] for f_indices_i in faiss_indices])
 
-        return mapped_indices, cos_sims[0]
+        return mapped_indices, cos_sims
 
     def update(self, new_embeds, new_indices):
         print('updating faiss index ...')

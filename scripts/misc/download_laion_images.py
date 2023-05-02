@@ -44,7 +44,7 @@ if __name__ == '__main__':
     # ----- Load data and maps -----
     # Load LAION sampled
     subset_file_name = \
-        configs.LAIONConfig.SUBSET_PREFIX \
+        configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX \
         + lt.get_laion_subset_file_name(0, settings['laion_until_part'])
 
     df = pd.read_parquet(os.path.join(settings['laion_path'], subset_file_name))

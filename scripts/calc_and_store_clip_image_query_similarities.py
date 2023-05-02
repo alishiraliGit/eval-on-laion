@@ -101,13 +101,13 @@ if __name__ == '__main__':
 
     # Set the files prefix
     if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
     elif params['sm_queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_SM_CLIP_RETRIEVAL_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
     elif params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
 
     # Query
     query_func = select_queries([params['query_type']])[0]

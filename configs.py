@@ -41,11 +41,12 @@ class LAIONConfig:
     NSFW_COL = 'NSFW'
     SIMILARITY_COL = 'similarity'
 
-    SUBSET_PREFIX = 'subset_'
-    SUBSET_NOT_SAMPLED_PREFIX = 'subset_all_'
+    SUBSET_SM_PREFIX = 'subset_sm_'
+    SUBSET_SM_FILTERED_PREFIX = 'subset_sm_filt_'
+    SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_sm_filt_most_sim_imgimg_'
+    SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_val_most_sim_imgimg_'
+    SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX = 'subset_ic_most_sim_txttxt_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
-    SUBSET_CLIP_RETRIEVAL_PREFIX = 'subset_cr_'
-    SUBSET_SM_CLIP_RETRIEVAL_PREFIX = 'subset_sb_cr_'
     PREDICTED_PREFIX = 'predicted_'
 
 

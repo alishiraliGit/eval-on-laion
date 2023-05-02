@@ -51,7 +51,7 @@ if __name__ == '__main__':
     logu.verbose = params['verbose']
 
     # Prefix
-    prefix = configs.LAIONConfig.SUBSET_NOT_SAMPLED_PREFIX
+    prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
 
     # Safety
     open_type = 'xb' if params['safe'] else 'wb'
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         pickle.dump(key2laionindices_sampled, f)
 
     # Save df
-    sampled_subset_file_name = configs.LAIONConfig.SUBSET_PREFIX \
+    sampled_subset_file_name = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX \
         + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     sampled_subset_file_path = os.path.join(params['laion_path'], sampled_subset_file_name)
 

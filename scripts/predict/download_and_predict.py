@@ -223,11 +223,11 @@ if __name__ == '__main__':
 
     # Prefix
     if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_CLIP_RETRIEVAL_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
     elif params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_PREFIX
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
 
     # Load model names
     load_models(params['predictors'], do_init=False)
