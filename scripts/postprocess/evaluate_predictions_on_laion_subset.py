@@ -34,7 +34,8 @@ if __name__ == '__main__':
     parser.add_argument('--predictors', type=str, default='selected')
 
     # Method
-    parser.add_argument('--queried_clip_retrieval', action='store_true')
+    parser.add_argument('--substring_matched_filtered', action='store_true')
+    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
     parser.add_argument('--queried', action='store_true')
     parser.add_argument('--query_type', type=str, default=None)
 
@@ -50,16 +51,19 @@ if __name__ == '__main__':
     print_verbose('initializing ...')
 
     # Boolean decisions
+    sm_filt = params['substring_matched_filtered']
+    val_most_similar = params['ilsvrc_val_most_similar_images']
     queried = params['queried']
-    queried_cr = params['queried_clip_retrieval']
 
     # Set the files prefix
-    if queried_cr:
+    if sm_filt:
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+    elif val_most_similar:
         prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
     elif queried:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+        raise Exception('Unknown method!')
 
     # Assertion
     if queried:
@@ -95,12 +99,14 @@ if __name__ == '__main__':
     # ----- Load labels (maps) -----
     print_verbose('loading labels ...')
 
-    if queried_cr:
+    if sm_filt:
+        map_file_name = 'wnid2laionindices(substring_matched).pkl'
+    elif val_most_similar:
         map_file_name = 'wnid2crindices.pkl'
     elif queried:
         map_file_name = f'wnid2laionindices(query_{params["query_type"]}).pkl'
     else:
-        map_file_name = 'wnid2laionindices(substring_matched).pkl'
+        raise Exception('Unknown method!')
 
     with open(os.path.join(params['labels_path'], map_file_name), 'rb') as f:
         wnid2laionindices = pickle.load(f)
@@ -151,7 +157,7 @@ if __name__ == '__main__':
 
     # ----- Evaluate predictions -----
     # Set column name
-    if queried_cr:
+    if val_most_similar:
         top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_cr_{mdl}'
     elif queried:
         top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_{params["query_type"]}_{mdl}'
