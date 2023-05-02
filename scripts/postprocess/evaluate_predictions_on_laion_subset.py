@@ -165,6 +165,8 @@ if __name__ == '__main__':
         top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_{mdl}'
 
     # Big loop
+    col2indices = {}
+    col2values = {}
     for idx in tqdm(df.index):
         if idx not in laionindex2wnids:
             continue
@@ -179,8 +181,25 @@ if __name__ == '__main__':
 
             pred_list = pred_df.loc[idx].tolist()
 
-            df.loc[idx, top_k_col_name(1, model_name)] = pred_list[0] in wnids
-            df.loc[idx, top_k_col_name(5, model_name)] = np.any([p in wnids for p in pred_list])
+            col = top_k_col_name(1, model_name)
+            val = pred_list[0] in wnids
+            if col not in col2indices:
+                col2indices[col] = []
+                col2values[col] = []
+            col2indices[col].append(idx)
+            col2values[col].append(val)
+
+            col = top_k_col_name(5, model_name)
+            val = np.any([p in wnids for p in pred_list])
+            if col not in col2indices:
+                col2indices[col] = []
+                col2values[col] = []
+            col2indices[col].append(idx)
+            col2values[col].append(val)
+
+    # ----- Add to dataframe -----
+    for col, laion_indices in tqdm(col2indices.items(), desc='updating dataframe'):
+        df.loc[laion_indices, col] = col2values[col]
 
     # ----- Save -----
     print_verbose('saving ...')
