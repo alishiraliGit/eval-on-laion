@@ -70,8 +70,10 @@ if __name__ == '__main__':
     parser.add_argument('--labels_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
 
     # Method
-    parser.add_argument('--queried_clip_retrieval', action='store_true')
-    parser.add_argument('--sm_queried_clip_retrieval', action='store_true')
+    parser.add_argument('--substring_matched_filtered', action='store_true')
+    parser.add_argument('--substring_matched_filtered_most_similar_images', action='store_true')
+    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
+    parser.add_argument('--imagenet_captions_most_similar_text_to_texts', action='store_true')
     parser.add_argument('--queried', action='store_true')
 
     # Query
@@ -100,14 +102,18 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Set the files prefix
-    if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['sm_queried_clip_retrieval']:
+    if params['substring_matched_filtered']:
+        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+    elif params['substring_matched_filtered_most_similar_images']:
         prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
+    elif params['ilsvrc_val_most_similar_images']:
+        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
+    elif params['imagenet_captions_most_similar_text_to_texts']:
+        prefix = configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
     elif params['queried']:
         prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
     else:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+        raise Exception('Unknown method!')
 
     # Query
     query_func = select_queries([params['query_type']])[0]
