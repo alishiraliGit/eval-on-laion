@@ -25,11 +25,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
 
-    parser.add_argument('--load_file_name', type=str, default='*2uniformlaionindices(substring_matched).pkl')
+    parser.add_argument('--labels_filter', type=str, help='Can use * to include multiple files.')
 
     # Method
+    parser.add_argument('--substring_matched', action='store_true')
+    parser.add_argument('--substring_matched_filtered', action='store_true')
     parser.add_argument('--queried', action='store_true')
-    parser.add_argument('--not_sampled', action='store_true')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Load sampled indices -----
-    file_paths = glob.glob(os.path.join(params['labels_path'], params['load_file_name']))
+    file_paths = glob.glob(os.path.join(params['labels_path'], params['labels_filter']))
 
     print_verbose(f'found {len(file_paths)} key2laion indices files.\n')
     print_verbose('\n'.join(file_paths) + '\n')
@@ -102,12 +103,14 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    if params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    elif params['not_sampled']:
+    if params['substring_matched']:
         prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
-    else:
+    elif params['substring_matched_filtered']:
         prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+    elif params['queried']:
+        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
+    else:
+        raise Exception('Unknown method!')
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)

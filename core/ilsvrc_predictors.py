@@ -208,3 +208,41 @@ models_convnext = {
     model_name: lambda name=model_name: ConvNextForImageClassification.from_pretrained(f'facebook/{name}')
     for model_name in model_names_convnext
 }
+
+
+###############
+# All models partitioning
+###############
+all_model_names_1k = model_names_resnet + \
+    [
+        'convnext-tiny-224',
+        'convnext-small-224',
+        'convnext-base-224',
+        'convnext-large-224',
+        'convnext-base-384',
+        'convnext-large-384'
+    ]
+
+all_model_names_pt21k_ft1k = model_names_vit + \
+    [
+        'convnext-base-224-22k-1k',
+        'convnext-large-224-22k-1k',
+        'convnext-base-384-22k-1k',
+        'convnext-large-384-22k-1k'
+    ] + \
+    [
+        # 'beit-base-patch16-224',
+        # 'beit-base-patch16-384',
+        # 'beit-large-patch16-224',
+        # 'beit-large-patch16-384'
+    ]
+
+all_model_names_21k = \
+    [
+        'convnext-base-224-22k',
+        'convnext-large-224-22k'
+    ] + \
+    [
+        # 'beit-base-patch16-224-pt22k-ft22k',
+        # 'beit-large-patch16-224-pt22k-ft22k',
+    ]
