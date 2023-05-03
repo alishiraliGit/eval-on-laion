@@ -231,10 +231,10 @@ all_model_names_pt21k_ft1k = model_names_vit + \
         'convnext-large-384-22k-1k'
     ] + \
     [
-        # 'beit-base-patch16-224',
-        # 'beit-base-patch16-384',
-        # 'beit-large-patch16-224',
-        # 'beit-large-patch16-384'
+        'beit-base-patch16-224',
+        'beit-base-patch16-384',
+        'beit-large-patch16-224',
+        'beit-large-patch16-384'
     ]
 
 all_model_names_21k = \
@@ -243,6 +243,6 @@ all_model_names_21k = \
         'convnext-large-224-22k'
     ] + \
     [
-        # 'beit-base-patch16-224-pt22k-ft22k',
-        # 'beit-large-patch16-224-pt22k-ft22k',
+        'beit-base-patch16-224-pt22k-ft22k',
+        'beit-large-patch16-224-pt22k-ft22k',
     ]
