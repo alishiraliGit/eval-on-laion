@@ -78,8 +78,11 @@ if __name__ == '__main__':
                 part2laionindices[part].add(laionindex)
 
     # Log
+    tot = 0
     for part, laionindices in part2laionindices.items():
         print_verbose(f'part {part} has {len(laionindices)} samples.')
+        tot += len(laionindices)
+    print_verbose(f'totally found {tot} unique samples.')
 
     # ----- Download and subset LAION -----
     part_dfs = []
@@ -103,6 +106,8 @@ if __name__ == '__main__':
 
     # ----- Save -----
     print_verbose('saving ...')
+
+    print_verbose(f'\tfinal dataframe has {len(df)} rows.')
 
     if params['substring_matched']:
         prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
