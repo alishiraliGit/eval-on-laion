@@ -49,6 +49,24 @@ class LAIONConfig:
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
     PREDICTED_PREFIX = 'predicted_'
 
+    @staticmethod
+    def method_to_prefix(method):
+        if method == 'substring_matched':
+            prefix = LAIONConfig.SUBSET_SM_PREFIX
+        elif method == 'substring_matched_filtered':
+            prefix = LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+        elif method == 'substring_matched_filtered_most_similar_images':
+            prefix = LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
+        elif method == 'ilsvrc_val_most_similar_images':
+            prefix = LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
+        elif method == 'imagenet_captions_most_similar_text_to_texts':
+            prefix = LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
+        elif method == 'queried':
+            prefix = LAIONConfig.SUBSET_QUERIED_PREFIX
+        else:
+            raise Exception('Unknown method!')
+
+        return prefix
 
 class LAIONSamplingConfig:
     UNIFORM_SAMPLES = 500
