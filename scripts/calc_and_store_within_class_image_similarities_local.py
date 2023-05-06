@@ -115,6 +115,7 @@ if __name__ == '__main__':
     for wnid, file_names in tqdm(wnid2filenames.items(), desc='calc. cross image sim.'):
         # Load images
         images = []
+        success_file_names = []
         for file_name in file_names:
             file_path = os.path.join(params['images_path'], file_name)
             image = Image.open(file_path)
@@ -123,6 +124,7 @@ if __name__ == '__main__':
                 continue
 
             images.append(image)
+            success_file_names.append(file_name)
 
         if len(images) <= 1:
             continue
@@ -132,4 +134,10 @@ if __name__ == '__main__':
 
         # Save similarities
         with open(os.path.join(params['save_path'], wnid2savefilename(wnid)), 'wb') as f:
-            pickle.dump(similarities, f)
+            pickle.dump(
+                {
+                    'index': success_file_names,
+                    'similarities': similarities
+                },
+                f
+            )
