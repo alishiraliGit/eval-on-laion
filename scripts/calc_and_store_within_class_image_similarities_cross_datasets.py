@@ -62,6 +62,10 @@ def calc_image_cross_similarities(inds, img_contents, local_imgs, clip_mdl: CLIP
         sims = []
         errs.append({'cause': 'In calc. image cross similarities an error occurred.', 'error': e})
 
+    # Close the images
+    for img in imgs:
+        img.close()
+
     return success_inds, sims, errs
 
 
@@ -163,7 +167,8 @@ if __name__ == '__main__':
     if params['do_sample']:
         print_verbose('sampling laion ...')
 
-        wnid2laionindices = {wnid: laion_indices[:params['n_sample']] for wnid, laion_indices in wnid2laionindices.items()}
+        wnid2laionindices = {wnid: laion_indices[:params['n_sample']] for
+                             wnid, laion_indices in wnid2laionindices.items()}
 
         print_verbose('done!\n')
 
