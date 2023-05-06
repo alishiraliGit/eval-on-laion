@@ -91,6 +91,10 @@ if __name__ == '__main__':
     # Method
     parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
+    # Sample
+    parser.add_argument('--do_sample', action='store_true')
+    parser.add_argument('--n_sample', type=int, default=100)
+
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
 
@@ -154,6 +158,14 @@ if __name__ == '__main__':
         wnid2laionindices = pickle.load(f)
 
     print_verbose('done!\n')
+
+    # ----- Sample LAION -----
+    if params['do_sample']:
+        print_verbose('sampling laion ...')
+
+        wnid2laionindices = {wnid: laion_indices[:params['n_sample']] for wnid, laion_indices in wnid2laionindices.items()}
+
+        print_verbose('done!\n')
 
     # ----- Load local labels -----
     print_verbose('loading local labels ...')
@@ -258,7 +270,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_name = prefix + 'img_img_sims_errors.txt'
+    err_file_name = prefix + 'to_' + local_prefix + 'img_img_sims_errors.txt'
     with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
