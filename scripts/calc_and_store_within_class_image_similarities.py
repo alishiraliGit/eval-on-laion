@@ -3,7 +3,6 @@ import os
 import multiprocessing
 import time
 import argparse
-import glob
 import pickle
 from PIL import Image
 from io import BytesIO
@@ -56,6 +55,7 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
     # Load the images
     errs = []
     imgs = []
+    success_inds = []
     for i_i, img_content in enumerate(img_contents):
         if img_content is None:
             continue
@@ -63,6 +63,7 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
         try:
             img = Image.open(BytesIO(img_content))
             imgs.append(img)
+            success_inds.append(inds[i_i])
         except Exception as e:
             errs.append(
                 {
@@ -72,9 +73,9 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
             )
 
     if len(imgs) == 0:
-        sims = None
+        sims = []
         errs.append({'cause': 'No image for this class.', 'error': None})
-        return sims, errs
+        return success_inds, sims, errs
 
     # Calc. similarities
     try:
@@ -82,10 +83,14 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
         embs = normalize(embs, axis=1, norm='l2')
         sims = embs.dot(embs.T)
     except Exception as e:
-        sims = None
+        sims = []
         errs.append({'cause': 'In calc. image cross similarities an error occurred.', 'error': e})
 
-    return sims, errs
+    # Close the images
+    for img in imgs:
+        img.close()
+
+    return success_inds, sims, errs
 
 
 if __name__ == '__main__':
@@ -97,17 +102,17 @@ if __name__ == '__main__':
     parser.add_argument('--laion_until_part', type=int, default=31)
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_filter', type=str, default='*')
+    parser.add_argument('--labels_file_name', type=str)
 
     parser.add_argument('--save_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'clip_image_similarities'))
 
     # Method
-    parser.add_argument('--substring_matched_filtered', action='store_true')
-    parser.add_argument('--substring_matched_filtered_most_similar_images', action='store_true')
-    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
-    parser.add_argument('--imagenet_captions_most_similar_text_to_texts', action='store_true')
-    parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
+
+    # Sample
+    parser.add_argument('--do_sample', action='store_true')
+    parser.add_argument('--n_sample', type=int, default=100)
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
@@ -131,18 +136,7 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Set the files prefix
-    if params['substring_matched_filtered']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
-    elif params['substring_matched_filtered_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['ilsvrc_val_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['imagenet_captions_most_similar_text_to_texts']:
-        prefix = configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
-    elif params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        raise Exception('Unknown method!')
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     # Saving
     os.makedirs(params['save_path'], exist_ok=True)
@@ -169,17 +163,22 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Load labels (maps) -----
+    # ----- Load LAION labels -----
     print_verbose('loading labels ...')
 
-    map_path = glob.glob(os.path.join(params['labels_path'], params['labels_filter']))
-    assert len(map_path) == 1
-    map_path = map_path[0]
-
-    with open(map_path, 'rb') as f:
+    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
         wnid2laionindices = pickle.load(f)
 
     print_verbose('done!\n')
+
+    # ----- Sample LAION -----
+    if params['do_sample']:
+        print_verbose('sampling laion ...')
+
+        wnid2laionindices = {wnid: laion_indices[:params['n_sample']] for
+                             wnid, laion_indices in wnid2laionindices.items()}
+
+        print_verbose('done!\n')
 
     # ----- Init. parallel download -----
     pool_download = multiprocessing.Pool(params['n_process_download'])
@@ -201,20 +200,27 @@ if __name__ == '__main__':
             errors.append(str(error['error']))
 
         # Calc. similarities
-        similarities, sim_errors = calc_image_cross_similarities(laion_indices, image_contents, clip)
+        success_laion_indices, similarities, sim_errors = \
+            calc_image_cross_similarities(laion_indices, image_contents, clip)
 
         for error in sim_errors:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
 
-        if similarities is None:
+        if len(similarities) == 0:
             continue
         if similarities.shape == (1, 1):
             continue
 
         # Save similarities
         with open(os.path.join(params['save_path'], wnid2savefilename(wnid)), 'wb') as f:
-            pickle.dump(similarities, f)
+            pickle.dump(
+                {
+                    'index': success_laion_indices,
+                    'similarities': similarities
+                },
+                f
+            )
 
     # ----- Close progress bars and processes -----
     pool_download.close()
