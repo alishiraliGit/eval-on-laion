@@ -26,13 +26,16 @@ def calc_image_cross_similarities(inds, img_contents, local_imgs, clip_mdl: CLIP
     # Load the images
     errs = []
     imgs = []
+    success_inds = []
     for i_i, img_content in enumerate(img_contents):
         if img_content is None:
             continue
 
         try:
             img = Image.open(BytesIO(img_content))
+
             imgs.append(img)
+            success_inds.append(inds[i_i])
         except Exception as e:
             errs.append(
                 {
@@ -42,9 +45,9 @@ def calc_image_cross_similarities(inds, img_contents, local_imgs, clip_mdl: CLIP
             )
 
     if len(imgs) == 0 or len(local_imgs) == 0:
-        sims = None
+        sims = []
         errs.append({'cause': 'No image for this class.', 'error': None})
-        return sims, errs
+        return success_inds, sims, errs
 
     # Calc. similarities
     try:
@@ -56,10 +59,10 @@ def calc_image_cross_similarities(inds, img_contents, local_imgs, clip_mdl: CLIP
 
         sims = embs.dot(local_embs.T)
     except Exception as e:
-        sims = None
+        sims = []
         errs.append({'cause': 'In calc. image cross similarities an error occurred.', 'error': e})
 
-    return sims, errs
+    return success_inds, sims, errs
 
 
 if __name__ == '__main__':
@@ -192,7 +195,7 @@ if __name__ == '__main__':
     pool_download = multiprocessing.Pool(params['n_process_download'])
 
     # ----- Start download -----
-    download_results = pool_download.imap(download_images_wrapper, df_gen(wnid2laionindices, df))
+    download_results = pool_download.imap(download_images_wrapper, df_gen(wnid2laionindices, df, min_len=1))
 
     # ----- Collect downloads and calc. embeddings -----
     # Init.
@@ -209,6 +212,7 @@ if __name__ == '__main__':
 
         # Load the local images
         local_images = []
+        success_file_names = []
         for file_name in wnid2filenames[wnid]:
             file_path = os.path.join(params['local_images_path'], file_name)
             local_image = Image.open(file_path)
@@ -217,20 +221,33 @@ if __name__ == '__main__':
                 continue
 
             local_images.append(local_image)
+            success_file_names.append(file_name)
 
         # Calc. similarities
-        similarities, sim_errors = calc_image_cross_similarities(laion_indices, image_contents, local_images, clip)
+        success_laion_indices, similarities, sim_errors = \
+            calc_image_cross_similarities(laion_indices, image_contents, local_images, clip)
+
+        # Close the open local images
+        for local_image in local_images:
+            local_image.close()
 
         for error in sim_errors:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
 
-        if similarities is None:
+        if len(similarities) == 0:
             continue
 
         # Save similarities
         with open(os.path.join(params['save_path'], wnid2savefilename(wnid)), 'wb') as f:
-            pickle.dump(similarities, f)
+            pickle.dump(
+                {
+                    'row_index': success_laion_indices,
+                    'col_index': success_file_names,
+                    'similarities': similarities
+                },
+                f
+            )
 
     # ----- Close progress bars and processes -----
     pool_download.close()

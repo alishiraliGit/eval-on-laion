@@ -41,11 +41,11 @@ def download_images_wrapper(args):
     return w, inds, img_contents, errs
 
 
-def df_gen(wnid2inds, dataframe):
+def df_gen(wnid2inds, dataframe, min_len=2):
     wnid2inds = dict(sorted(wnid2inds.items(), key=lambda item: len(item[1])))
 
     for w, inds in wnid2inds.items():
-        if len(inds) <= 1:
+        if len(inds) < min_len:
             continue
 
         urls = dataframe.loc[inds, configs.LAIONConfig.URL_COL].tolist()
