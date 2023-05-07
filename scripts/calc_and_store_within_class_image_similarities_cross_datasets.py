@@ -228,6 +228,9 @@ if __name__ == '__main__':
             errors.append(str(error['error']))
 
         # Load the local images
+        if wnid not in wnid2filenames:
+            continue
+
         local_images = []
         success_file_names = []
         for file_name in wnid2filenames[wnid]:
