@@ -36,3 +36,4 @@ imagenet_captions.parquet
 imagenet_captions_imgtxtsim_errors.txt
 ILSVRC2012_val.parquet
 ILSVRC2012_val_predicted.parquet
+imageneta
