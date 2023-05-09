@@ -111,6 +111,10 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
+    # TODO
+    print(wnid2filenames['n04285008'])
+    raise Exception('debug')
+
     # ----- Load and calc. similarity -----
     for wnid, file_names in tqdm(wnid2filenames.items(), desc='calc. cross image sim.'):
         # Load images
