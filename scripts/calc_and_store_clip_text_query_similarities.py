@@ -34,14 +34,8 @@ if __name__ == '__main__':
                         default=os.path.join('ilsvrc2012', 'processed',
                                              'lemma2wnid(unique_in_ilsvrc_ignored_empty_wnids).pkl'))
 
-    # Subset method
     # Method
-    parser.add_argument('--substring_matched', action='store_true')
-    parser.add_argument('--substring_matched_filtered', action='store_true')
-    parser.add_argument('--substring_matched_filtered_most_similar_images', action='store_true')
-    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
-    parser.add_argument('--imagenet_captions_most_similar_text_to_texts', action='store_true')
-    parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
@@ -67,20 +61,7 @@ if __name__ == '__main__':
     logu.verbose = params['verbose']
 
     # Prefix
-    if params['substring_matched']:
-        prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
-    elif params['substring_matched_filtered']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
-    elif params['substring_matched_filtered_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['ilsvrc_val_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['imagenet_captions_most_similar_text_to_texts']:
-        prefix = configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
-    elif params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        raise Exception('Unknown method!')
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     # Query
     query_func = select_queries([params['query_type']])[0]
