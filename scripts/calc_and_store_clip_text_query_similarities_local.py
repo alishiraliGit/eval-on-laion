@@ -54,7 +54,7 @@ if __name__ == '__main__':
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    query_col = params['query_type'] + '_' + params['query_key']
+    query_col = params['query_type'] + '_' + 'wnid'
     text_to_query_sim_col = f'text_to_{query_col}_similarity'
 
     print_verbose('done!\n')
