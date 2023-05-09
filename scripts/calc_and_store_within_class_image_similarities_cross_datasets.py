@@ -106,6 +106,9 @@ if __name__ == '__main__':
     parser.add_argument('--no_gpu', action='store_true')
     parser.add_argument('--gpu_id', type=int, default=0)
 
+    # Continue
+    parser.add_argument('--no_continue', dest='continue', action='store_false')
+
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
 
@@ -223,6 +226,9 @@ if __name__ == '__main__':
         # Parse the downloaded images
         wnid, laion_indices, image_contents, down_errors = down_res
 
+        if params['continue'] and os.path.exists(os.path.join(params['save_path'], wnid2savefilename(wnid))):
+            continue
+
         for error in down_errors:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
@@ -238,6 +244,7 @@ if __name__ == '__main__':
             local_image = Image.open(file_path)
 
             if local_image.mode != 'RGB':
+                local_image.close()
                 continue
 
             local_images.append(local_image)
