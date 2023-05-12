@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
     # Path
     parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected'))
-    parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.parquet'))
+    parser.add_argument('--dataframe_path', type=str,
+                        default=os.path.join('ilsvrc2012', 'imagenet_captions_with_sims_to_all_queries.parquet'))
 
     parser.add_argument('--synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
@@ -145,7 +146,7 @@ if __name__ == '__main__':
             print_verbose('saving ....')
 
             df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]] = np.array(all_similarities)
-            df.to_parquet(params['dataframe_path'].replace('.parquet', '_with_sims_to_all_queries.parquet'), index=True)
+            df.to_parquet(params['dataframe_path'], index=True)
 
             all_indices = []
             all_similarities = []
@@ -157,7 +158,7 @@ if __name__ == '__main__':
 
     if len(all_indices) > 0:
         df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]] = np.array(all_similarities)
-        df.to_parquet(params['dataframe_path'].replace('.parquet', '_with_sims_to_all_queries.parquet'), index=True)
+        df.to_parquet(params['dataframe_path'], index=True)
     else:
         print_verbose('\talready saved!')
 
