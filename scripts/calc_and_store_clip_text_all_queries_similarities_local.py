@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     queries = [query_func(wnid) for wnid in all_wnids]
     q_embeds = clip.text_embeds(queries)
-    q_embeds = normalize(q_embeds, axis=1, norm='l2')
+    q_embeds_norm = normalize(q_embeds, axis=1, norm='l2')
 
     print_verbose('done!\n')
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
             text_embeds_batch_norm = normalize(text_embeds_batch, axis=1, norm='l2')
 
             # Find similarities
-            similarity_to_queries_batch = text_embeds_batch_norm.dot(q_embeds.T)
+            similarity_to_queries_batch = text_embeds_batch_norm.dot(q_embeds_norm.T)
 
             # Step
             all_indices.extend(indices_batch)
@@ -144,6 +144,9 @@ if __name__ == '__main__':
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
+
+            print(df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]].shape)
+            print(np.array(all_similarities).shape)
 
             df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]] = np.array(all_similarities)
             df.to_parquet(params['dataframe_path'], index=True)
