@@ -22,7 +22,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
-    parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected'))
     parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.parquet'))
 
     parser.add_argument('--index2wnid_path', type=str,
