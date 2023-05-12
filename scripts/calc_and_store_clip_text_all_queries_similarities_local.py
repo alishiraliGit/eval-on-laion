@@ -145,10 +145,7 @@ if __name__ == '__main__':
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
 
-            print(df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]].shape)
-            print(np.array(all_similarities).shape)
-
-            df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]] = np.array(all_similarities)
+            df.loc[all_indices, [text_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
             df.to_parquet(params['dataframe_path'], index=True)
 
             all_indices = []
