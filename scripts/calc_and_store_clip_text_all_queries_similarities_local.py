@@ -157,7 +157,7 @@ if __name__ == '__main__':
     print_verbose('saving ....')
 
     if len(all_indices) > 0:
-        df.loc[all_indices, [text_to_query_col_func for wnid in all_wnids]] = np.array(all_similarities)
+        df.loc[all_indices, [text_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
         df.to_parquet(params['dataframe_path'], index=True)
     else:
         print_verbose('\talready saved!')
