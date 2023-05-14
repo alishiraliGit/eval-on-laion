@@ -103,7 +103,7 @@ if __name__ == '__main__':
     indices_batch = []
     i_batch = 0
     i_row = -1
-    for idx, row in tqdm(df_todo.iterrows(), desc='calc. image-query sim.', total=len(df_todo)):
+    for idx, row in tqdm(df_todo.iterrows(), desc='calc. text to all queries sim.', total=len(df_todo)):
         i_row += 1
 
         indices_batch.append(idx)

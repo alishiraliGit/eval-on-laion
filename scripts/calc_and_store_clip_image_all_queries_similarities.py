@@ -3,12 +3,12 @@ import os
 import multiprocessing
 import time
 import argparse
-import pickle
 from PIL import Image
 from io import BytesIO
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
+from sklearn.preprocessing import normalize
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
@@ -17,45 +17,39 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
-from core.retrieve_image import download_image_content, verify_image
+from utils.ilsvrc_utils import load_lemmas_and_wnids
 from core.clip import CLIP
 from core.queries import select_queries, QueryType
 
-
-def download_image_wrapper(args):
-    idx, row = args
-    try:
-        img_content = download_image_content(row[configs.LAIONConfig.URL_COL])
-        verify_image(img_content)
-        return idx, img_content, None
-    except Exception as e:
-        return idx, None, {'cause': f'In downloading image of index {idx} an error occurred.', 'error': e}
+from scripts.calc_and_store_clip_image_query_similarities import download_image_wrapper
 
 
-def calc_image_to_text_similarities(idx_img_txt_list, clip_mdl: CLIP):
+def calc_image_to_queries_similarities(idx_img_list, q_embs_norm, clip_mdl: CLIP):
     # Load the images
     inds = []
     imgs = []
-    txts = []
     errs = []
-    for idx, img_content, txt in idx_img_txt_list:
+    for idx, img_content, txt in idx_img_list:
         try:
             img = Image.open(BytesIO(img_content))
 
             inds.append(idx)
             imgs.append(img)
-            txts.append(txt)
 
         except Exception as e:
             errs.append({'cause': f'In loading image of index {idx} from image content an error occurred.', 'error': e})
 
     # Calc. similarities
     try:
-        sims = clip_mdl.similarities(texts=txts, images=imgs)
+        img_embs = clip_mdl.image_embeds(imgs)
+        img_embs_norm = normalize(img_embs, axis=1, norm='l2')
+        sims = img_embs_norm.dot(q_embs_norm.T)
+
         return inds, sims, errs
+
     except Exception as e:
         errs.append({'cause': 'In calc. image-text similarities an error occurred.', 'error': e})
-        return inds, [np.nan]*len(inds), errs
+        return inds, np.ones((len(inds), len(q_embs_norm)))*np.nan, errs
 
 
 if __name__ == '__main__':
@@ -66,15 +60,10 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
 
-    parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
+    parser.add_argument('--synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
     # Method
-    parser.add_argument('--substring_matched_filtered', action='store_true')
-    parser.add_argument('--substring_matched_filtered_most_similar_images', action='store_true')
-    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
-    parser.add_argument('--imagenet_captions_most_similar_text_to_texts', action='store_true')
-    parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
@@ -101,26 +90,15 @@ if __name__ == '__main__':
     # Compute
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
-    # Set the files prefix
-    if params['substring_matched_filtered']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
-    elif params['substring_matched_filtered_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['ilsvrc_val_most_similar_images']:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['imagenet_captions_most_similar_text_to_texts']:
-        prefix = configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
-    elif params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        raise Exception('Unknown method!')
+    # Prefix/Postfix
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    postfix = 'with_sims_to_all_queries'
 
     # Query
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    query_col = params['query_type'] + '_' + 'wnid'
-    image_to_query_sim_col = f'image_to_{query_col}_similarity'
+    image_to_query_col_func = lambda w: f'image_to_{params["query_type"]}_{w}_similarity'
 
     print_verbose('done!\n')
 
@@ -131,23 +109,11 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Loading labels -----
-    print_verbose('loading labels ...')
+    # ----- Load synsets -----
+    print_verbose('loading synsets ...')
 
-    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
-        wnid2laionindices = pickle.load(f)
-
-    print_verbose('done!\n')
-
-    # ----- Find the inverse map -----
-    print_verbose('finding inverse map ...')
-
-    laionindex2wnids = {}
-    for wnid, laion_indices in wnid2laionindices.items():
-        for laion_idx in laion_indices:
-            if laion_idx not in laionindex2wnids:
-                laionindex2wnids[laion_idx] = []
-            laionindex2wnids[laion_idx].append(wnid)
+    id_lemmas_df = load_lemmas_and_wnids(params['synsets_path'])
+    all_wnids = id_lemmas_df[configs.ILSVRCConfigs.WNID_COL].tolist()
 
     print_verbose('done!\n')
 
@@ -155,7 +121,7 @@ if __name__ == '__main__':
     print_verbose('loading dataframe ...')
 
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
-    subset_file_name = prefix + file_name_wo_prefix
+    subset_file_name = prefix + file_name_wo_prefix.replace('parquet', postfix + '.parquet')
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
@@ -165,34 +131,22 @@ if __name__ == '__main__':
     # ----- Preprocess -----
     print_verbose('preprocess ...')
 
-    # Drop rows with multiple labels
-    selected_laion_indices = [laion_idx for laion_idx, wnids in laionindex2wnids.items() if len(wnids) == 1]
-
-    df = df.loc[selected_laion_indices]
-
-    # Create a new column
-    if image_to_query_sim_col not in df:
-        df[image_to_query_sim_col] = np.nan
+    # Create new columns
+    for wnid in all_wnids:
+        if image_to_query_col_func(wnid) not in df:
+            df[image_to_query_col_func(wnid)] = np.nan
 
     # Find rows w/o similarity
-    df_todo = df.iloc[np.isnan(df[image_to_query_sim_col].tolist())]
+    df_todo = df.iloc[np.isnan(df[image_to_query_col_func(all_wnids[-1])].tolist())]
 
     print_verbose('done!\n')
 
-    # ----- Design queries -----
-    print_verbose('design queries ...')
+    # ----- Find the embeddings for queries -----
+    print_verbose('calc. embeddings for the queries')
 
-    laionindex2query = {}
-    for laionindex, wnids in laionindex2wnids.items():
-        if len(wnids) > 1:
-            continue
-
-        wnid = wnids[0]
-
-        laionindex2query[laionindex] = query_func(wnid)
-
-    # Add to df
-    df[query_col] = df.index.map(laionindex2query)
+    queries = [query_func(wnid) for wnid in all_wnids]
+    q_embeds = clip.text_embeds(queries)
+    q_embeds_norm = normalize(q_embeds, axis=1, norm='l2')
 
     print_verbose('done!\n')
 
@@ -208,7 +162,8 @@ if __name__ == '__main__':
     errors = []
 
     i_batch = 0
-    for i_res, down_res in tqdm(enumerate(download_results), desc='download and calc. sim.', total=len(df_todo)):
+    for i_res, down_res in tqdm(enumerate(download_results),
+                                desc='download and calc. image to all queries sim.', total=len(df_todo)):
         # Catch the errors in downloading
         index, image_content, error = down_res
 
@@ -216,26 +171,24 @@ if __name__ == '__main__':
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
         else:
-            # Get the queries
-            text = df.loc[index, query_col]
-
             # Append the downloaded image to the batch
-            download_ready_results.append([index, image_content, text])
+            download_ready_results.append([index, image_content])
 
         if len(download_ready_results) < configs.CLIPConfig.BATCH_SIZE and i_res < (len(df_todo) - 1):
             continue
         if len(download_ready_results) == 0:
             continue
 
-        # Calc. embeddings
-        indices_batch, similarities_batch, errors_batch = calc_image_to_text_similarities(download_ready_results, clip)
+        # Calc. similarities
+        indices_batch, similarities_batch, errors_batch = \
+            calc_image_to_queries_similarities(download_ready_results, q_embeds_norm, clip)
 
         for error in errors_batch:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
 
         # Update df
-        df.loc[indices_batch, image_to_query_sim_col] = similarities_batch
+        df.loc[indices_batch, [image_to_query_col_func(wnid) for wnid in all_wnids]] = similarities_batch
 
         # Save
         if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df_todo) - 1):
@@ -258,7 +211,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = subset_file_path.replace('parquet', 'imgquerysim_errors.txt')
+    err_file_path = subset_file_path.replace('parquet', 'imgallqueriessim_errors.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
