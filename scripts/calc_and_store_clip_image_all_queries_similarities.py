@@ -29,7 +29,7 @@ def calc_image_to_queries_similarities(idx_img_list, q_embs_norm, clip_mdl: CLIP
     inds = []
     imgs = []
     errs = []
-    for idx, img_content, txt in idx_img_list:
+    for idx, img_content in idx_img_list:
         try:
             img = Image.open(BytesIO(img_content))
 
