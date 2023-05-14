@@ -158,6 +158,9 @@ if __name__ == '__main__':
 
     # ----- Collect downloads and calc. embeddings -----
     # Init.
+    all_indices = []
+    all_similarities = []
+
     download_ready_results = []
     errors = []
 
@@ -187,14 +190,19 @@ if __name__ == '__main__':
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
 
-        # Update df
-        df.loc[indices_batch, [image_to_query_col_func(wnid) for wnid in all_wnids]] = similarities_batch
+        # Step
+        all_indices.extend(indices_batch)
+        all_similarities.extend(similarities_batch)
 
         # Save
         if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df_todo) - 1):
             print_verbose('saving ....')
 
+            df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
             df.to_parquet(subset_file_path, index=True)
+
+            all_indices = []
+            all_similarities = []
 
             print_verbose('done!\n')
 
@@ -219,6 +227,10 @@ if __name__ == '__main__':
 
     print_verbose('saving ....')
 
-    df.to_parquet(subset_file_path, index=True)
+    if len(all_indices) > 0:
+        df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
+        df.to_parquet(subset_file_path, index=True)
+    else:
+        print_verbose('\talready saved!')
 
     print_verbose('done!\n')

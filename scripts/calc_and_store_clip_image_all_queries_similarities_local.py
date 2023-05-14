@@ -151,12 +151,7 @@ if __name__ == '__main__':
             all_similarities.extend(similarity_to_queries_batch)
 
         except Exception as e:
-            similarity_to_queries_batch = []
             print(str(e))
-
-        # Step
-        all_indices.extend(indices_batch)
-        all_similarities.extend(similarity_to_queries_batch)
 
         indices_batch = []
         images_batch = []
