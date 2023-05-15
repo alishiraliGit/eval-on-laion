@@ -41,3 +41,4 @@ imageneta
 imagenet_captions_with_sims_to_all_queries.parquet
 ILSVRC2012_val_with_sims_to_all_queries.parquet
 imagenetv2-matched-frequency
+imagenetv2-matched-frequency.parquet
