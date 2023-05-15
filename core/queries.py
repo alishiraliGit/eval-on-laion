@@ -9,6 +9,7 @@ class QueryType:
     LEMMAS = 'lemmas'
     A_PHOTO_OF_NAME = 'a_photo_of_name'
     A_PHOTO_OF_NAME_DEF = 'a_photo_of_name_def'
+    A_CLEAR_PHOTO_OF_NAME_DEF = 'a_clear_photo_of_name_def'
     A_PHOTO_OF_LEMMAS = 'a_photo_of_lemmas'
 
 
@@ -25,6 +26,8 @@ def select_queries(query_types):
             qs.append(query_a_photo_of_name)
         elif q_type == QueryType.A_PHOTO_OF_NAME_DEF:
             qs.append(query_a_photo_of_name_def)
+        elif q_type == QueryType.A_CLEAR_PHOTO_OF_NAME_DEF:
+            qs.append(query_a_clear_photo_of_name_def)
         elif q_type == QueryType.A_PHOTO_OF_LEMMAS:
             qs.append(query_a_photo_of_lemmas)
         else:
@@ -73,6 +76,14 @@ def query_a_photo_of_name_def(wnid):
     name_def = query_name_def(wnid)
 
     a_photo_of_name_def = 'a photo of ' + name_def
+
+    return a_photo_of_name_def
+
+
+def query_a_clear_photo_of_name_def(wnid):
+    name_def = query_name_def(wnid)
+
+    a_photo_of_name_def = 'a clear photo of ' + name_def
 
     return a_photo_of_name_def
 
