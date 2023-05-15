@@ -12,7 +12,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.preprocessing import normalize
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu
@@ -21,7 +21,7 @@ from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
 from core.clip import CLIP
 
-from scripts.calc_and_store_within_class_image_similarities import download_images_wrapper, df_gen
+from scripts.calcsimilarity.calc_and_store_intra_class_image_similarities import download_images_wrapper, df_gen
 
 
 def load_image_and_calc_embeddings(inds, img_contents, clip_mdl: CLIP):

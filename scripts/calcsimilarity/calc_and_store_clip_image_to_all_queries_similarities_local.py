@@ -1,12 +1,14 @@
 import sys
 import os
 import argparse
+import pickle
+from PIL import Image
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.preprocessing import normalize
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu
@@ -22,8 +24,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
+    parser.add_argument('--images_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_img_val'))
     parser.add_argument('--dataframe_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'imagenet_captions_with_sims_to_all_queries.parquet'))
+                        default=os.path.join('ilsvrc2012', 'ILSVRC2012_val_with_sims_to_all_queries.parquet'))
+    parser.add_argument('--index2filename_path', type=str, default=None)
 
     parser.add_argument('--synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
@@ -53,7 +57,7 @@ if __name__ == '__main__':
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    text_to_query_col_func = lambda w: f'text_to_{params["query_type"]}_{w}_similarity'
+    image_to_query_col_func = lambda w: f'image_to_{params["query_type"]}_{w}_similarity'
 
     print_verbose('done!\n')
 
@@ -79,11 +83,11 @@ if __name__ == '__main__':
 
     # Create new columns
     for wnid in all_wnids:
-        if text_to_query_col_func(wnid) not in df:
-            df[text_to_query_col_func(wnid)] = np.nan
+        if image_to_query_col_func(wnid) not in df:
+            df[image_to_query_col_func(wnid)] = np.nan
 
     # Find rows w/o similarity
-    df_todo = df.iloc[np.isnan(df[text_to_query_col_func(all_wnids[-1])].tolist())]
+    df_todo = df.iloc[np.isnan(df[image_to_query_col_func(all_wnids[-1])].tolist())]
 
     print_verbose('done!\n')
 
@@ -96,55 +100,68 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
+    # ----- Load the map to files -----
+    print_verbose('loading index2filename map ...')
+
+    if params['index2filename_path'] is None:
+        print_verbose('\tdefaulting to identical map ...')
+        index2filename = {idx: idx for idx in df.index}
+    else:
+        with open(params['index2filename_path'], 'rb') as f:
+            index2filename = pickle.load(f)
+
+    print_verbose('done!\n')
+
     # ----- Load and calc. similarity -----
     all_indices = []
     all_similarities = []
 
     indices_batch = []
+    images_batch = []
     i_batch = 0
     i_row = -1
-    for idx, row in tqdm(df_todo.iterrows(), desc='calc. text to all queries sim.', total=len(df_todo)):
+    for idx, row in tqdm(df_todo.iterrows(), desc='calc. image to all queries sim.', total=len(df_todo)):
         i_row += 1
 
-        indices_batch.append(idx)
+        # Load the image
+        file_path = os.path.join(params['images_path'], index2filename[idx])
+        image = Image.open(file_path)
+
+        if image.mode == 'RGB':
+            # Add to the batch
+            indices_batch.append(idx)
+            images_batch.append(image)
 
         if len(indices_batch) < configs.CLIPConfig.BATCH_SIZE and i_row < (len(df_todo) - 1):
             continue
         if len(indices_batch) == 0:
             continue
 
-        # Get the texts
-        texts_batch = df.loc[indices_batch, configs.LAIONConfig.TEXT_COL].tolist()
-
-        # Find text-to-query similarities
+        # Find image-to-query similarities
         try:
             # Get embeddings
-            text_embeds_batch = clip.text_embeds(texts_batch)
-            text_embeds_batch_norm = normalize(text_embeds_batch, axis=1, norm='l2')
+            image_embeds_batch = clip.image_embeds(images_batch)
+            image_embeds_batch_norm = normalize(image_embeds_batch, axis=1, norm='l2')
 
             # Find similarities
-            similarity_to_queries_batch = text_embeds_batch_norm.dot(q_embeds_norm.T)
+            similarity_to_queries_batch = image_embeds_batch_norm.dot(q_embeds_norm.T)
 
             # Step
             all_indices.extend(indices_batch)
             all_similarities.extend(similarity_to_queries_batch)
 
         except Exception as e:
-            similarity_to_queries_batch = []
             print(str(e))
 
-        # Step
-        all_indices.extend(indices_batch)
-        all_similarities.extend(similarity_to_queries_batch)
-
         indices_batch = []
+        images_batch = []
         i_batch += 1
 
         # Save
         if (i_batch + 1) % params['save_freq'] == 0:
             print_verbose('saving ....')
 
-            df.loc[all_indices, [text_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
+            df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
             df.to_parquet(params['dataframe_path'], index=True)
 
             all_indices = []
@@ -156,7 +173,7 @@ if __name__ == '__main__':
     print_verbose('saving ....')
 
     if len(all_indices) > 0:
-        df.loc[all_indices, [text_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
+        df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
         df.to_parquet(params['dataframe_path'], index=True)
     else:
         print_verbose('\talready saved!')

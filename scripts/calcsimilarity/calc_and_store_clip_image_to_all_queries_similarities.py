@@ -10,7 +10,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.preprocessing import normalize
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import logging_utils as logu
@@ -21,7 +21,7 @@ from utils.ilsvrc_utils import load_lemmas_and_wnids
 from core.clip import CLIP
 from core.queries import select_queries, QueryType
 
-from scripts.calc_and_store_clip_image_query_similarities import download_image_wrapper
+from scripts.calcsimilarity.calc_and_store_clip_image_to_query_similarities import download_image_wrapper
 
 
 def calc_image_to_queries_similarities(idx_img_list, q_embs_norm, clip_mdl: CLIP):
