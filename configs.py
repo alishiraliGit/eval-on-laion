@@ -43,6 +43,7 @@ class LAIONConfig:
 
     SUBSET_SM_PREFIX = 'subset_sm_'
     SUBSET_SM_FILTERED_PREFIX = 'subset_sm_filt_'
+    SUBSET_SM_CLEAR_PHOTO_FILTERED_PREFIX = 'subset_sm_clear_photo_filt_'
     SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_sm_filt_most_sim_imgimg_'
     SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_val_most_sim_imgimg_'
     SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX = 'subset_ic_most_sim_txttxt_'
@@ -55,6 +56,8 @@ class LAIONConfig:
             prefix = LAIONConfig.SUBSET_SM_PREFIX
         elif method == 'substring_matched_filtered':
             prefix = LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+        elif method == 'substring_matched_clear_photo_filtered':
+            prefix = LAIONConfig.SUBSET_SM_CLEAR_PHOTO_FILTERED_PREFIX
         elif method == 'substring_matched_filtered_most_similar_images':
             prefix = LAIONConfig.SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX
         elif method == 'ilsvrc_val_most_similar_images':

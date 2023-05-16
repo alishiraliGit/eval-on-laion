@@ -25,13 +25,17 @@ if __name__ == '__main__':
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
-    parser.add_argument('--labels_save_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
+    parser.add_argument('--labels_save_file_name', type=str, default='wnid2laionindices(substring_matched).pkl',
+                        help='set to auto to automatically choose based on the method.')
 
     # Filtering
     parser.add_argument('--similarity_col', type=str, default='text_to_name_def_wnid_similarity')
     parser.add_argument('--similarity_th', type=float, default=0.82, help='formerly, 0.805')
 
     parser.add_argument('--remove_nsfw', action='store_true')
+
+    # Method
+    parser.add_argument('--method', type=str, default='substring_matched_filtered', help='Look at configs.LAIONConfig.')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -124,13 +128,19 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+
     # Save labels
-    with open(os.path.join(params['labels_path'], params['labels_save_file_name']), open_type) as f:
+    if params['labels_save_file_name'] == 'auto':
+        labels_file_name = f'wnid2laionindices({prefix[:-1]}).pkl'
+    else:
+        labels_file_name = params['labels_save_file_name']
+
+    with open(os.path.join(params['labels_path'], labels_file_name), open_type) as f:
         pickle.dump(key2laionindices_sampled, f)
 
     # Save df
-    sampled_subset_file_name = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX \
-        + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    sampled_subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     sampled_subset_file_path = os.path.join(params['laion_path'], sampled_subset_file_name)
 
     if params['safe'] and os.path.exists(sampled_subset_file_path):
