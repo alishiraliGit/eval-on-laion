@@ -192,8 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('--to_iloc', type=int, default=-1)
 
     # Method
-    parser.add_argument('--queried_clip_retrieval', action='store_true')
-    parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Predictors
     parser.add_argument('--predictors', type=str, default='selected')
@@ -222,12 +221,7 @@ if __name__ == '__main__':
     os.makedirs(params['save_path'], exist_ok=True)
 
     # Prefix
-    if params['queried_clip_retrieval']:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     # Load model names
     load_models(params['predictors'], do_init=False)
