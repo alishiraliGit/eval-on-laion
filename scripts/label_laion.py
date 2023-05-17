@@ -82,7 +82,6 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Load lemma2wnid -----
-    # Load lemma2wnid
     print_verbose('loading lemma2wnid ...')
 
     with open(params['lemma2wnid_path'], 'rb') as f:

@@ -47,6 +47,7 @@ class LAIONConfig:
     SUBSET_SM_FILTERED_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_sm_filt_most_sim_imgimg_'
     SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX = 'subset_val_most_sim_imgimg_'
     SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX = 'subset_ic_most_sim_txttxt_'
+    SUBSET_IC_MOST_SIMILAR_TXT_TXT_WITH_SIMILAR_LABELS_PREFIX = 'subset_ic_most_sim_txttxt_sim_labels_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
     PREDICTED_PREFIX = 'predicted_'
 
