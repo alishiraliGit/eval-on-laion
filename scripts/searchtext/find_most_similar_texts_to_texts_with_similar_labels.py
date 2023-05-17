@@ -151,15 +151,17 @@ if __name__ == '__main__':
         laion_indices_b, sims_b = [], []
         for i_row in range(len(laion_indices_bk)):
             laion_indices_k, sims_k = laion_indices_bk[i_row], sims_bk[i_row]
-            wnid = wnids_batch[i_row]
-            if wnid not in wnid2laionindices:
-                continue
+
             laion_index, sim = None, None
-            for k_res in range(k):
-                if laion_indices_k[k_res] in wnid2laionindices[wnid]:
-                    laion_index = laion_indices_k[k_res]
-                    sim = sims_k[k_res]
-                    break
+
+            wnid = wnids_batch[i_row]
+            if wnid in wnid2laionindices:
+                for k_res in range(k):
+                    if laion_indices_k[k_res] in wnid2laionindices[wnid]:
+                        laion_index = laion_indices_k[k_res]
+                        sim = sims_k[k_res]
+                        break
+
             laion_indices_b.append(laion_index)
             sims_b.append(sim)
 
