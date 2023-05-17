@@ -28,10 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--labels_filter', type=str, help='Can use * to include multiple files.')
 
     # Method
-    parser.add_argument('--substring_matched', action='store_true')
-    parser.add_argument('--substring_matched_filtered', action='store_true')
-    parser.add_argument('--imagenet_captions_most_similar_text_to_texts', action='store_true')
-    parser.add_argument('--queried', action='store_true')
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -109,16 +106,7 @@ if __name__ == '__main__':
 
     print_verbose(f'\tfinal dataframe has {len(df)} rows.')
 
-    if params['substring_matched']:
-        prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
-    elif params['substring_matched_filtered']:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
-    elif params['imagenet_captions_most_similar_text_to_texts']:
-        prefix = configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
-    elif params['queried']:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        raise Exception('Unknown method!')
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)

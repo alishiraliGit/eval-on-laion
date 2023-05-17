@@ -65,6 +65,8 @@ class LAIONConfig:
             prefix = LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
         elif method == 'imagenet_captions_most_similar_text_to_texts':
             prefix = LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX
+        elif method == 'imagenet_captions_most_similar_text_to_texts_with_similar_labels':
+            prefix = LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_WITH_SIMILAR_LABELS_PREFIX
         elif method == 'queried':
             prefix = LAIONConfig.SUBSET_QUERIED_PREFIX
         else:
