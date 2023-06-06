@@ -1,9 +1,10 @@
-This is the accompanying code of the paper "What Makes ImageNet Look Unlike LAION."
+This is the accompanying code of "What Makes ImageNet Look Unlike LAION."
 
-This page explains how to create LAIONet (Section 2 of the paper), 
-evaluate the accuracy of various models on LAIONet and compare it to their accuracy on ImageNet ILSVRC2012 (Section 3.1), 
-analyze and contrast intra-class similarity of LAIONet, ImageNet, and ImageNet-V2 (Sections 3.2 and 4.1) 
-, and reproduce the results of experiments in Sections 4.2 and 4.3 of the paper.
+This page explains how to
+1. Create LAIONet (Section 2 of the paper), 
+2. Evaluate the accuracy of various models on LAIONet and compare it to their accuracy on ImageNet ILSVRC2012 (Section 3.1), 
+3. Analyze and contrast intra-class similarity of LAIONet, ImageNet, and ImageNet-V2 (Sections 3.2 and 4.1) 
+4. Reproduce the results of experiments in Sections 4.2 and 4.3 of the paper.
 
 # Setup
 We recommend cloning the project, creating a virtual environment,
