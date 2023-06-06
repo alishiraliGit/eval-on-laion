@@ -25,19 +25,17 @@ if __name__ == '__main__':
     parser.add_argument('--laion_until_part', type=int, default=31)
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
+    parser.add_argument('--labels_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
 
     parser.add_argument('--predictions_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'ilsvrc_predictions'))
     parser.add_argument('--predictions_ver', type=str, default='*')
 
+    # Method
+    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
+
     # Predictors
     parser.add_argument('--predictors', type=str, default='selected')
-
-    # Method
-    parser.add_argument('--substring_matched_filtered', action='store_true')
-    parser.add_argument('--ilsvrc_val_most_similar_images', action='store_true')
-    parser.add_argument('--queried', action='store_true')
-    parser.add_argument('--query_type', type=str, default=None)
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -50,24 +48,8 @@ if __name__ == '__main__':
 
     print_verbose('initializing ...')
 
-    # Boolean decisions
-    sm_filt = params['substring_matched_filtered']
-    val_most_similar = params['ilsvrc_val_most_similar_images']
-    queried = params['queried']
-
     # Set the files prefix
-    if sm_filt:
-        prefix = configs.LAIONConfig.SUBSET_SM_FILTERED_PREFIX
-    elif val_most_similar:
-        prefix = configs.LAIONConfig.SUBSET_VAL_MOST_SIMILAR_IMG_IMG_PREFIX
-    elif queried:
-        prefix = configs.LAIONConfig.SUBSET_QUERIED_PREFIX
-    else:
-        raise Exception('Unknown method!')
-
-    # Assertion
-    if queried:
-        assert params['query_type'] is not None
+    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     # Choose models
     model_names, _, _ = load_models(params['predictors'], do_init=False)
@@ -99,16 +81,7 @@ if __name__ == '__main__':
     # ----- Load labels (maps) -----
     print_verbose('loading labels ...')
 
-    if sm_filt:
-        map_file_name = 'wnid2laionindices(substring_matched).pkl'
-    elif val_most_similar:
-        map_file_name = 'wnid2crindices.pkl'
-    elif queried:
-        map_file_name = f'wnid2laionindices(query_{params["query_type"]}).pkl'
-    else:
-        raise Exception('Unknown method!')
-
-    with open(os.path.join(params['labels_path'], map_file_name), 'rb') as f:
+    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
         wnid2laionindices = pickle.load(f)
 
     print_verbose('done!\n')
@@ -157,12 +130,7 @@ if __name__ == '__main__':
 
     # ----- Evaluate predictions -----
     # Set column name
-    if val_most_similar:
-        top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_cr_{mdl}'
-    elif queried:
-        top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_{params["query_type"]}_{mdl}'
-    else:
-        top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_{mdl}'
+    top_k_col_name = lambda k, mdl: f'top_{k}_is_correct_{mdl}'
 
     # Big loop
     col2indices = {}

@@ -1,0 +1,1 @@
+FAISS index for LAION texts should be stored / created here.

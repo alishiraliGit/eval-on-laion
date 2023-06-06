@@ -1,0 +1,3 @@
+Place images of ILSVRC2012 training set under this folder.
+Only portion of images which are present in ImageNet-Captions will be used
+and you can remove this folder after you ran drop_imagenet_examples_wo_caption.py.

@@ -1,0 +1,1 @@
+The output of scripts/preprocess/drop_imagenet_examples_wo_caption.py will appear here.

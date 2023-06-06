@@ -12,7 +12,7 @@ from utils.logging_utils import print_verbose
 
 if __name__ == '__main__':
     # ----- Settings -----
-    imagenet_captions_path = os.path.join('ilsvrc2012', 'imagenet_captions.json')
+    imagenet_captions_path = os.path.join('imagenet-captions', 'imagenet_captions.json')
     images_path = os.path.join('ilsvrc2012', 'ILSVRC2012_img_train')
     selected_images_path = os.path.join('ilsvrc2012', 'ILSVRC2012_img_train_selected')
 

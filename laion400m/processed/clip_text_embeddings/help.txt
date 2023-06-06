@@ -1,0 +1,1 @@
+LAION text embeddings from scripts/searchtext/calc_and_store_clip_text_embeddings.py will be stored here.

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     faiss_index_folder = os.path.join('..', '..', 'laion400m', 'processed', 'faiss_index')
     os.makedirs(faiss_index_folder, exist_ok=True)
 
-    postfix = '_test3'
+    postfix = ''  # Use this for versioning
 
     # ----- Read and map all indices -----
     indices_file_paths = sorted(glob.glob(os.path.join(indices_path, 'indices*.npy')))

@@ -19,7 +19,7 @@ if __name__ == '__main__':
                         default=os.path.join('laion400m', 'processed', 'ilsvrc_labels', 'icimagename2laionindices.pkl'))
 
     parser.add_argument('--index2wnid_path', type=str,
-                        default=os.path.join('ilsvrc2012', 'processed', 'labels', 'icimagename2wnid.pkl'))
+                        default=os.path.join('imagenet-captions', 'processed', 'labels', 'icimagename2wnid.pkl'))
 
     parser.add_argument('--save_file_name', type=str,
         default=f'wnid2laionindices({configs.LAIONConfig.SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX[:-1]}).pkl')

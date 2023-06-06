@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import laion_utils as laionu
@@ -54,9 +54,6 @@ if __name__ == '__main__':
     # Env
     logu.verbose = params['verbose']
 
-    # Prefix
-    prefix = configs.LAIONConfig.SUBSET_SM_PREFIX
-
     # Safety
     open_type = 'xb' if params['safe'] else 'wb'
 
@@ -65,7 +62,8 @@ if __name__ == '__main__':
     # ----- Load the subset -----
     print_verbose('loading laion subset ...')
 
-    subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_name = \
+        configs.LAIONConfig.SUBSET_SM_PREFIX + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)

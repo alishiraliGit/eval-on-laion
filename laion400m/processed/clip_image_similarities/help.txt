@@ -1,0 +1,2 @@
+The outputs of the following scripts appear here:
+- scripts/calcsimilarity/calc_and_store_intra_class_image_similarities.py

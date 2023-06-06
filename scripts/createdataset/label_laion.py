@@ -5,7 +5,7 @@ import pickle
 from tqdm import tqdm
 import multiprocessing
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
 from utils import pytorch_utils as ptu
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--self_destruct', action='store_true')
 
     # Overwrite?
-    parser.add_argument('--no_safe', dest='safe', action='store_false')
+    parser.add_argument('--no_safe', dest='safe', action='store_false', help='If set, overwriting will be allowed.')
 
     # Convert to dictionary
     params = vars(parser.parse_args())

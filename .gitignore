@@ -9,11 +9,11 @@ laionvenv
 imgs
 safe
 figs
-*.ipynb
+notebooks_test
 clip_text_embeddings
 clip_text_indices
 part*.parquet
-subset*
+laion400m/subset*
 faiss_index
 credentials
 clip_text_embeddings_downloaded
@@ -31,11 +31,10 @@ val_img_embeddings.pkl
 del
 from_clip_retrieval
 ilsvrc2012/processed/predictions
-ilsvrc2012/processed/labels
+imagenet-captions/processed/labels
 imagenet_captions.json
 imagenet_captions.parquet
 imagenet_captions_imgtxtsim_errors.txt
-ILSVRC2012_val.parquet
 ILSVRC2012_val_predicted.parquet
 imageneta
 imagenet_captions_with_sims_to_all_queries.parquet

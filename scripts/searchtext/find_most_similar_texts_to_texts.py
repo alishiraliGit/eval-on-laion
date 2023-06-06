@@ -24,7 +24,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Path
-    parser.add_argument('--dataframe_path', type=str, default=os.path.join('ilsvrc2012', 'imagenet_captions.parquet'))
+    parser.add_argument('--dataframe_path', type=str,
+                        default=os.path.join('imagenet-captions', 'imagenet_captions.parquet'))
 
     parser.add_argument('--indices_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'clip_text_indices', 'all_indices.npy'))

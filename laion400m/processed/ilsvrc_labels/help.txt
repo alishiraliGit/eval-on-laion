@@ -1,0 +1,5 @@
+The outputs of the following scripts appear here:
+- scripts/createdataset/label_laion.py
+- scripts/createdataset/label_laion_parallel.py
+- scripts/createdataset/sample_laion_from_most_similars.py
+- scripts/searchtext/find_most_similar_texts_to_texts.py
