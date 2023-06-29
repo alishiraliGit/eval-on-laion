@@ -1,5 +1,5 @@
 This is the accompanying code of "What Makes ImageNet Look Unlike LAION."
-([link to the paper](https://arxiv.org/abs/2306.15769)){target="_blank"}
+(<a href="https://arxiv.org/abs/2306.15769" target="_blank">link to the paper</a>)
 
 This page explains how to
 1. Create LAIONet (Section 2 of the paper), 
