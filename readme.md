@@ -2,10 +2,47 @@ This is the accompanying code of "What Makes ImageNet Look Unlike LAION."
 (<a href="https://arxiv.org/abs/2306.15769" target="_blank">link to the paper</a>)
 
 This page explains how to
-1. Create LAIONet (Section 2 of the paper), 
-2. Evaluate the accuracy of various models on LAIONet and compare it to their accuracy on ImageNet ILSVRC2012 (Section 3.1), 
-3. Analyze and contrast intra-class similarity of LAIONet, ImageNet, and ImageNet-V2 (Sections 3.2 and 4.1) 
-4. Reproduce the results of experiments in Sections 4.2 and 4.3 of the paper.
+1. Download and use LAIONet
+2. Create LAIONet (Section 2 of the paper)
+3. Evaluate the accuracy of various models on LAIONet and compare it to their accuracy on ImageNet ILSVRC2012 (Section 3.1) 
+4. Analyze and contrast intra-class similarity of LAIONet, ImageNet, and ImageNet-V2 (Sections 3.2 and 4.1) 
+5. Reproduce the results of experiments in Sections 4.2 and 4.3 of the paper
+
+# Download and use LAIONet
+LAIONet is a research artifact intended to highlight the differences between LAION and ImageNet. 
+Our goal was not to provide a new benchmark or a new training set. LAIONet includes confidently sampled images, but the labels are not reviewed by humans and may contain limited mistakes.
+Therefore, please use LAIONet cautiously. You may also want to follow next sections to create your own version of LAIONet
+with possibly different thresholds.
+
+LAIONet as a table of image URLs and their captions can be downloaded from [here](laion400m/laionet_v1.parquet) as a parquet file.
+You may want to use `pd.read_parquet` command to read the file.
+The table contains the following columns:
+- SAMPLE_ID: The original ID assigned to each instance in LAION-400M. We will not use these IDs.
+- URL: The URL of the image.
+- TEXT: The caption of the image.
+- HEIGHT, WIDTH, and LICENSE of the images.
+- NSFW: Whether the images are safe for work. Copied from LAION-400M. NSFW images are not removed so please use safely.
+- similarity: The CLIP similarity of the image and caption as reported by LAION-400M developers. 
+We use a different version of CLIP which is not consistent with theirs. 
+Therefore, if you are going to use this similarity, you may want to run [calc_and_store_clip_image_to_text_similarities.py](scripts/calcsimilarity/calc_and_store_clip_image_to_text_similarities.py)
+to obtain consistent numbers as ours.
+- name_def_wnid: The textual representation of the instance created by concatenating the name
+and definition of its associated synset. This is called synset text in the paper.
+- text_to_name_def_wnid_similarity: CLIP similarity of the caption and synset text. In other words, the similarity of TEXT and
+name_def_wnid columns. In the paper, this is referred to as text-to-[name: def] CLIP similarity. 
+
+The labels of LAIONet are pickled [here](laion400m/processed/ilsvrc_labels/wnid2indices_v1.pkl).
+You may want to use `pickle.load` to load the labels. This will load a Python dictionary with a WordNet ID as key
+and a list of indices as the value. These indices are the indices of LAIONet table. 
+WordNet IDs are unique IDs assigned to each synset in WordNet.
+Look at [this](ilsvrc2012/ILSVRC2012_synsets.txt) file to see what lemmas are associated with each WordNet ID.
+
+The previous steps are sufficient to download and use LAIONet independently.
+But if you want to use the codes of this repository to process LAIONet, in order to ensure consistent naming,
+create a copy of the LAIONet table and labels at the same directories and rename them as the following:
+- [laionet_v1.parquet](laion400m/laionet_v1.parquet) to subset_sm_filt_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet
+- [wnid2indices_v1.pkl](laion400m/processed/ilsvrc_labels/wnid2indices_v1.pkl) to lemma2uniformlaionindices(substring_matched).pkl
+
 
 # Setup
 We recommend cloning the project, creating a virtual environment,
