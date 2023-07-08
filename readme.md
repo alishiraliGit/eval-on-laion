@@ -15,8 +15,9 @@ Therefore, please use LAIONet cautiously. You may also want to follow next secti
 with possibly different thresholds.
 
 LAIONet as a table of image URLs and their captions can be downloaded from [here](laion400m/laionet_v1.parquet) as a parquet file.
-You may want to use `pd.read_parquet` command to read the file.
-The table contains the following columns:
+You may want to use `pd.read_parquet` command to read the file. 
+The images are under their copyright and should be downloaded or processed on the fly (as the codes do in this repository).
+LAIONet table contains the following columns:
 - SAMPLE_ID: The original ID assigned to each instance in LAION-400M. We will not use these IDs.
 - URL: The URL of the image.
 - TEXT: The caption of the image.
