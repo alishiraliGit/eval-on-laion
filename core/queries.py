@@ -36,27 +36,31 @@ def select_queries(query_types):
     return qs
 
 
-def query_name(wnid):
-    synset = get_synset(wnid)
+def query_name(wnid, lemma=None):
+    if lemma is not None:
+        name = lemma
+    else:
+        synset = get_synset(wnid)
 
-    name = synset.name()
-    name = name[:name.find('.n.')]
-    name = name.replace('_', ' ')
+        name = synset.name()
+        name = name[:name.find('.n.')]
+        name = name.replace('_', ' ')
 
     return name
 
 
-def query_name_def(wnid):
-    synset = get_synset(wnid)
+def query_name_def(wnid, lemma=None):
+    name = query_name(wnid, lemma)
 
-    name = query_name(wnid)
+    synset = get_synset(wnid)
 
     name_def = name + ' which is ' + synset.definition()
 
     return name_def
 
 
-def query_lammas(wnid):
+def query_lammas(wnid, lemma=None):
+    # lemma argument just for compatibility
     synset = get_synset(wnid)
 
     lemmas = ' or '.join([lemma.name().replace('_', ' ') for lemma in synset.lemmas()])
@@ -64,32 +68,32 @@ def query_lammas(wnid):
     return lemmas
 
 
-def query_a_photo_of_name(wnid):
-    name = query_name(wnid)
+def query_a_photo_of_name(wnid, lemma=None):
+    name = query_name(wnid, lemma)
 
     a_photo_of_name = 'a photo of ' + name
 
     return a_photo_of_name
 
 
-def query_a_photo_of_name_def(wnid):
-    name_def = query_name_def(wnid)
+def query_a_photo_of_name_def(wnid, lemma=None):
+    name_def = query_name_def(wnid, lemma)
 
     a_photo_of_name_def = 'a photo of ' + name_def
 
     return a_photo_of_name_def
 
 
-def query_a_clear_photo_of_name_def(wnid):
-    name_def = query_name_def(wnid)
+def query_a_clear_photo_of_name_def(wnid, lemma=None):
+    name_def = query_name_def(wnid, lemma)
 
     a_photo_of_name_def = 'a clear photo of ' + name_def
 
     return a_photo_of_name_def
 
 
-def query_a_photo_of_lemmas(wnid):
-    lemmas = query_lammas(wnid)
+def query_a_photo_of_lemmas(wnid, lemma=None):
+    lemmas = query_lammas(wnid, lemma)
 
     a_photo_of_lemmas = 'a photo of ' + lemmas
 
