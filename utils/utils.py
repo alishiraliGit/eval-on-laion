@@ -20,6 +20,20 @@ def find_inverse_map(maps):
     return im
 
 
+def join_maps(maps):
+    joined_map = {}
+    for m in maps:
+        for k, values in m.items():
+            if not isinstance(values, list):
+                values = [values]
+
+            if k not in joined_map:
+                joined_map[k] = []
+            joined_map[k].extend(values)
+
+    return joined_map
+
+
 def drop_keys_with_multiple_values(m):
     drop_keys = []
     for k, values in m.items():

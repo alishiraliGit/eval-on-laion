@@ -27,8 +27,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--labels_filter', type=str, help='Can use * to include multiple files.')
 
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
+    # Prefix
+    parser.add_argument('--save_prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -106,13 +106,13 @@ if __name__ == '__main__':
 
     print_verbose(f'\tfinal dataframe has {len(df)} rows.')
 
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    prefix = params['save_prefix']
 
-    subset_file_name = prefix + laionu.get_laion_subset_file_name(0, latest_part)
+    subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, latest_part)
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
-    if os.path.exists(subset_file_path) and params['safe']:
-        raise Exception('Subset already exists!')
+    if params['safe'] and os.path.exists(subset_file_path):
+        raise FileExistsError
 
     df.to_parquet(subset_file_path, index=True)
 

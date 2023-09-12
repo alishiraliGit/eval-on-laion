@@ -39,6 +39,14 @@ class ILSVRCPredictorsConfig:
     BATCH_SIZE = 32  # Used to be 64. Decreased for a better GPU memory management.
 
 
+class NamingConfig:
+    SUBSET_SM_PREFIX = 'subset_sm'
+
+    @staticmethod
+    def append_filtered(prefix, similarity_col):
+        return prefix + f'_filt({similarity_col})'
+
+
 class LAIONConfig:
     URL_BASE = 'https://deploy.laion.ai/8f83b608504d46bb81708ec86e912220/dataset/'
     NUM_PARTS = 32

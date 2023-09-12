@@ -10,6 +10,7 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
+from utils import utils
 from utils import laion_utils as laionu
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
@@ -22,20 +23,16 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
+    parser.add_argument('--load_prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
-    parser.add_argument('--labels_save_file_name', type=str, default='wnid2laionindices(substring_matched).pkl',
-                        help='set to auto to automatically choose based on the method.')
 
     # Filtering
     parser.add_argument('--similarity_col', type=str, default='text_to_name_def_wnid_similarity')
-    parser.add_argument('--similarity_th', type=float, default=0.82, help='formerly, 0.805')
+    parser.add_argument('--similarity_th', type=float, default=0.82)
 
     parser.add_argument('--remove_nsfw', action='store_true')
-
-    # Method
-    parser.add_argument('--method', type=str, default='substring_matched_filtered', help='Look at configs.LAIONConfig.')
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
@@ -51,8 +48,8 @@ if __name__ == '__main__':
 
     print_verbose('initializing ...')
 
-    # Env
-    logu.verbose = params['verbose']
+    # Prefix
+    prefix = params['load_prefix']
 
     # Safety
     open_type = 'xb' if params['safe'] else 'wb'
@@ -62,8 +59,7 @@ if __name__ == '__main__':
     # ----- Load the subset -----
     print_verbose('loading laion subset ...')
 
-    subset_file_name = \
-        configs.LAIONConfig.SUBSET_SM_PREFIX + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
@@ -79,7 +75,7 @@ if __name__ == '__main__':
 
         print_verbose('done!\n')
 
-    # ----- Load labels (maps) -----
+    # ----- Load and join labels (maps) -----
     print_verbose('loading labels (maps) ...')
 
     maps_paths = glob.glob(os.path.join(params['labels_path'], params['labels_filter']))
@@ -87,15 +83,13 @@ if __name__ == '__main__':
     print_verbose(f'\tfound {len(maps_paths)} key2laion maps:\n')
     print_verbose('\t- ' + '\n\t- '.join(maps_paths))
 
-    key2laionindices = {}
+    # Load maps
+    maps = []
     for path in tqdm(maps_paths):
         with open(path, 'rb') as f:
-            key2laionindices_i = pickle.load(f)
+            maps.append(pickle.load(f))
 
-        for key, laionindices in key2laionindices_i.items():
-            if key not in key2laionindices:
-                key2laionindices[key] = []
-            key2laionindices[key].extend(laionindices)
+    key2laionindices = utils.join_maps(maps)
 
     print_verbose('done!\n')
 
@@ -126,19 +120,16 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    save_prefix = configs.NamingConfig.append_filtered(prefix, params['similarity_col'])
 
     # Save labels
-    if params['labels_save_file_name'] == 'auto':
-        labels_file_name = f'wnid2laionindices({prefix[:-1]}).pkl'
-    else:
-        labels_file_name = params['labels_save_file_name']
+    labels_file_name = f'wnid2laionindices({save_prefix}).pkl'
 
     with open(os.path.join(params['labels_path'], labels_file_name), open_type) as f:
         pickle.dump(key2laionindices_sampled, f)
 
     # Save df
-    sampled_subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    sampled_subset_file_name = save_prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     sampled_subset_file_path = os.path.join(params['laion_path'], sampled_subset_file_name)
 
     if params['safe'] and os.path.exists(sampled_subset_file_path):

@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 
 import configs
 from core.text_encoders import select_text_encoder
 from core.queries import select_queries, QueryType, QueryKey
-from utils import utils as utils
+from utils import utils
 from utils import laion_utils as laionu
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu
@@ -25,6 +25,7 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
+    parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='*')
@@ -32,9 +33,6 @@ if __name__ == '__main__':
     parser.add_argument('--lemma2wnid_path', type=str,
                         default=os.path.join('ilsvrc2012', 'processed',
                                              'lemma2wnid(unique_in_ilsvrc_ignored_empty_wnids).pkl'))
-
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
@@ -62,7 +60,7 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Prefix
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    prefix = params['prefix']
 
     # Query
     query_func = select_queries([params['query_type']])[0]
@@ -77,7 +75,7 @@ if __name__ == '__main__':
     # ----- Load the subset -----
     print_verbose('loading laion subset ...')
 
-    subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
