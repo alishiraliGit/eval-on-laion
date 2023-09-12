@@ -3,16 +3,15 @@ import os
 import argparse
 import pickle
 import glob
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from sklearn.preprocessing import normalize
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
-from core.clip import CLIP
-from core.queries import select_queries, QueryType
+from core.text_encoders import select_text_encoder
+from core.queries import select_queries, QueryType, QueryKey
+from utils import utils as utils
 from utils import laion_utils as laionu
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu
@@ -39,7 +38,10 @@ if __name__ == '__main__':
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
-    parser.add_argument('--query_key', type=str, help='wnid or lemma')
+    parser.add_argument('--query_key', type=str, help='wnid or lemma. Look at queries.QueryKey.')
+
+    # Text encoder
+    parser.add_argument('--text_encoder_ver', type=str, default=configs.CLIPConfig.DEFAULT_VERSION)
 
     # Compute
     parser.add_argument('--gpu_id', type=int, default=0)
@@ -58,17 +60,17 @@ if __name__ == '__main__':
 
     # Env
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
-    logu.verbose = params['verbose']
 
     # Prefix
     prefix = configs.LAIONConfig.method_to_prefix(params['method'])
 
     # Query
     query_func = select_queries([params['query_type']])[0]
+    QueryKey.assert_query_key(params['query_key'])
 
     # Column names
     query_col = params['query_type'] + '_' + params['query_key']
-    sim_col = f'text_to_{query_col}_similarity'
+    sim_col = f'text_to_{query_col}_similarity_{params["text_encoder_ver"]}'
 
     print_verbose('done!\n')
 
@@ -91,18 +93,14 @@ if __name__ == '__main__':
     print_verbose(f'\tfound {len(maps_paths)} key2laion maps:\n')
     print_verbose('\t- ' + '\n\t- '.join(maps_paths))
 
-    laionindex2keys = {}
+    # Load maps
+    maps = []
     for path in tqdm(maps_paths):
-        # Load
         with open(path, 'rb') as f:
-            key2laionindices = pickle.load(f)
+            maps.append(pickle.load(f))
 
-        # Add to the inverse map
-        for key, laionindices in key2laionindices.items():
-            for laionindex in laionindices:
-                if laionindex not in laionindex2keys:
-                    laionindex2keys[laionindex] = []
-                laionindex2keys[laionindex].append(key)
+    # Find the inverse map
+    laionindex2keys = utils.find_inverse_map(maps)
 
     print_verbose(f'\tfound {len(laionindex2keys)} unique indices.')
     print_verbose('done!\n')
@@ -110,21 +108,16 @@ if __name__ == '__main__':
     # ----- Drop samples with multiple labels -----
     print_verbose('dropping samples with multiplicity ...')
 
-    drop_indices = []
-    for laionindex, keys in laionindex2keys.items():
-        if len(keys) > 1:
-            drop_indices.append(laionindex)
+    drop_indices = utils.drop_keys_with_multiple_values(laionindex2keys)
 
-    print_verbose(f'\tfound {len(drop_indices)} samples with multiple labels.')
-
-    for drop_idx in drop_indices:
-        laionindex2keys.pop(drop_idx)
+    print_verbose(f'\tfound {len(drop_indices)} samples with multiple labels and dropped them.')
 
     print_verbose('done!\n')
 
     # ----- Load lemma to wnid map -----
-    with open(params['lemma2wnid_path'], 'rb') as f:
-        lemma2wnid = pickle.load(f)
+    if params['query_key'] == QueryKey.LEMMA:
+        with open(params['lemma2wnid_path'], 'rb') as f:
+            lemma2wnid = pickle.load(f)
 
     # ----- Design queries -----
     laionindex2query = {}
@@ -132,37 +125,43 @@ if __name__ == '__main__':
         assert len(keys) == 1
         key = keys[0]
 
-        wnid = lemma2wnid.get(key, key)
+        if params['query_key'] == QueryKey.WNID:
+            wnid = key
+            lemma = None
+        elif params['query_key'] == QueryKey.LEMMA:
+            wnid = lemma2wnid[key]
+            lemma = key
+        else:
+            raise Exception(f'{params["query_key"]} is an invalid query_key!')
 
-        laionindex2query[laionindex] = query_func(wnid)
+        laionindex2query[laionindex] = query_func(wnid, lemma)
 
     # Add to df
     df[query_col] = df.index.map(laionindex2query)
 
-    # ----- Init. CLIP -----
-    clip = CLIP()
+    # ----- Select the text encoder -----
+    text_encoder, text_encoder_batch_size = select_text_encoder(params['text_encoder_ver'])
 
     # ----- Loop over keys ------
     laionindices = list(laionindex2query.keys())
-    for cnt in tqdm(range(0, len(laionindices), configs.CLIPConfig.BATCH_SIZE),
+    for cnt in tqdm(range(0, len(laionindices), text_encoder_batch_size),
                     desc='calc. clip text to query similarity', disable=not logu.verbose):
-        indices_batch = laionindices[cnt: (cnt + configs.CLIPConfig.BATCH_SIZE)]
+
+        indices_batch = laionindices[cnt: (cnt + text_encoder_batch_size)]
 
         # Extract a batch
-        texts_batch = \
-            df.loc[indices_batch, configs.LAIONConfig.TEXT_COL].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
-        queries_batch = df.loc[indices_batch, query_col].fillna(configs.CLIPConfig.REPLACE_NA_STR).tolist()
+        texts_batch = df.loc[
+            indices_batch, configs.LAIONConfig.TEXT_COL
+        ].fillna(configs.TextEncoderConfig.REPLACE_NA_STR).tolist()
+        queries_batch = df.loc[indices_batch, query_col].fillna(configs.TextEncoderConfig.REPLACE_NA_STR).tolist()
 
         try:
             # Get embeddings
-            text_embeds_batch = clip.text_embeds(texts_batch)
-            text_embeds_batch_norm = normalize(text_embeds_batch, axis=1, norm='l2')
-
-            query_embeds_batch = clip.text_embeds(queries_batch)
-            query_embeds_batch_norm = normalize(query_embeds_batch, axis=1, norm='l2')
+            text_embeds_batch = text_encoder(texts_batch)
+            query_embeds_batch = text_encoder(queries_batch)
 
             # Find similarities
-            sims = np.sum(text_embeds_batch_norm * query_embeds_batch_norm, axis=1).tolist()
+            sims = utils.cosine_similarity(text_embeds_batch, query_embeds_batch).tolist()
 
             # Update df
             df.loc[indices_batch, sim_col] = sims

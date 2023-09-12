@@ -8,6 +8,8 @@ from utils import pytorch_utils as ptu
 
 class CLIP:
     def __init__(self, ver=configs.CLIPConfig.DEFAULT_VERSION):
+        self.ver = ver
+
         self.processor = CLIPProcessor.from_pretrained(f'openai/{ver}')
         self.model = CLIPModel.from_pretrained(f'openai/{ver}')
 

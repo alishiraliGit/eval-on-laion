@@ -17,7 +17,7 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 
 from scripts.calcsimilarity.calc_and_store_intra_class_image_similarities import download_images_wrapper, df_gen
 

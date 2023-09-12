@@ -18,7 +18,7 @@ from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
 from utils.ilsvrc_utils import load_lemmas_and_wnids
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 from core.queries import select_queries, QueryType
 
 from scripts.calcsimilarity.calc_and_store_clip_image_to_query_similarities import download_image_wrapper

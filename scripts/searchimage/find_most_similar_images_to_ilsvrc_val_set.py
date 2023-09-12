@@ -19,7 +19,7 @@ from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
 from core.retrieve_image import download_image_content, verify_image
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 
 
 def download_image_wrapper(args):

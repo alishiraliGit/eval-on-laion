@@ -3,6 +3,15 @@
 from utils.wordnet_utils import get_synset
 
 
+class QueryKey:
+    WNID = 'wnid'  # Query will use wnid to load the synset and use synset name
+    LEMMA = 'lemma'  # Query will use the given lemma in place of name
+
+    @staticmethod
+    def assert_query_key(query_key):
+        assert query_key in [QueryKey.WNID, QueryKey.LEMMA], f'{query_key} is an invalid query_key!'
+
+
 class QueryType:
     NAME = 'name'
     NAME_DEF = 'name_def'
@@ -31,7 +40,7 @@ def select_queries(query_types):
         elif q_type == QueryType.A_PHOTO_OF_LEMMAS:
             qs.append(query_a_photo_of_lemmas)
         else:
-            raise Exception('Invalid query type!')
+            raise Exception(f'{q_type} is an invalid query type!')
 
     return qs
 

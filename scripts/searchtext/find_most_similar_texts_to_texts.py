@@ -3,7 +3,6 @@ import os
 import argparse
 import pickle
 # FAISS will crash if you don't import it here!
-import faiss
 
 import pandas as pd
 from tqdm import tqdm
@@ -12,7 +11,7 @@ from sklearn.preprocessing import normalize
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 from core.faiss_index import FaissIndex
 from utils import pytorch_utils as ptu
 from utils import logging_utils as logu

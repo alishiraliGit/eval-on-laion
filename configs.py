@@ -8,8 +8,17 @@ class CLIPConfig:
     MAX_SEQ_LENGTH = 77  # Based on my observations, num of tokens shouldn't exceed 77. Currently, useless.
     BATCH_SIZE = 64
     DIM = 512
-    REPLACE_NA_STR = 'None'
+    REPLACE_NA_STR = 'None'  # TODO: Should be moved to TextEncoderConfig
     METRIC_TYPE = 'ip'
+
+
+class BertConfig:
+    DEFAULT_VERSION = 'bert-base-uncased'
+    BATCH_SIZE = 64
+
+
+class TextEncoderConfig:
+    REPLACE_NA_STR = 'None'
 
 
 class AutoFaissConfig:

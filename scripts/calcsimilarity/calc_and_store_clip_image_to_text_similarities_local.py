@@ -13,7 +13,7 @@ import configs
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 
 
 def calc_image_to_text_similarities(imgs, txts, clip_mdl: CLIP):

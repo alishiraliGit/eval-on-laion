@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
-from core.clip import CLIP
+from core.foundationalmodels.clip import CLIP
 
 
 def calc_image_cross_similarities(imgs, clip_mdl: CLIP):
