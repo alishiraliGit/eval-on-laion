@@ -95,3 +95,4 @@ sentencepiece~=0.1.97
 qudida~=0.0.4
 zipp~=3.15.0
 statsmodels~=0.13.5
+imutils~=0.5.4
