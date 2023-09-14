@@ -1,6 +1,6 @@
 import configs
-from core.foundationalmodels.clip import CLIP
-from core.foundationalmodels.bert import Bert
+from core.foundationmodels.clip import CLIP
+from core.foundationmodels.bert import Bert
 
 encoder_ver = None
 encoder = None

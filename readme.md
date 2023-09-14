@@ -76,17 +76,19 @@ Use script [label_laion_parallel.py](scripts/createdataset/label_laion_parallel.
 to run on multiple LAION parts in parallel. 
 Look at the scripts for further arguments and help.
 
-Using default parameters, the previous scripts save a dictionary per each part 
+Using default parameters, the previous scripts save two dictionaries per each part 
 in folder [laion400m/processed/ilsvrc_labels](laion400m/processed/ilsvrc_labels). 
-Each dictionary maps WNID to LAION indices for that part.  
+These dictionaries are wnid2laionindices(substring_matched_part[x]).pkl and 
+lemma2laionindices(substring_matched_part[x]).pkl, which map each WNID or the lemmas
+associated with a WNID to LAION indices for that part.  
 Use the following command to extract a dataset from all LAION instances that are matched to at least one lemma:
 ```shell
 python scripts/createdataset/subset_laion.py \
 --labels_filter "wnid2laionindices(substring_matched_part*).pkl" \
---method substring_matched \
+--save_prefix subset_sm \
 --self_destruct
 ```
-The `--method` argument is only for consistent naming throughout the process and `--self_destruct` ensures 
+The `--save_prefix` argument is only for consistent naming throughout the process and `--self_destruct` ensures 
 LAION original files will be removed from the disk by process completion.
 This command will create a large dataset in `.parquet` format under folder [laion400m](laion400m) 
 occupying ~4 GB of the disk. 
@@ -96,19 +98,26 @@ The first step to calculate textual similarity of a LAION instance and a synset 
 for the synset. Generally, we call such a representation a query.
 Following the paper, we recommend concatenating the name of the synset and its short definition. 
 This corresponds to `QueryType.NAME_DEF`. Look at [queries.py](core/queries.py) for a list of possible queries.
+After defining a textual representation for the synset, a similarity measure should be defined.
+We encode the texts and measure the cosine similarity of the encoded texts.
+There are multiple text encoders available at this step. 
+By default, we use the text embedding of a base CLIP model. 
+But any version of Bert listed on [Hugging Face](https://huggingface.co/bert-base-uncased) or 
+any OpenAI CLIP implementation on Hugging Face can be used.
 Run the following command to calculate LAION text to synset text (query) similarity 
 for the dataset we created in the previous step:
 ```shell
 python scripts/calcsimilarity/calc_and_store_clip_text_to_query_similarities.py \
 --labels_filter "wnid2laionindices(substring_matched_part*).pkl" \
---method substring_matched \
+--prefix subset_sm \
 --query_type name_def \
 --query_key wnid \
+--text_encoder_ver 'clip-vit-base-patch32' \
 --gpu_id 0
 ```
 The above command allows specifying `--gpu_id` or `no_gpu`. Look at the script for further arguments and help.
-We recommend using a single GPU for this task to accelerate calculation of CLIP embeddings. 
-Upon completion, a new column `text_to_name_def_wnid_similarity` will be added to the dataset. 
+We recommend using a single GPU for this task to accelerate the calculation. 
+Upon completion, a new column `text_to_name_def_wnid_similarity_[text_encoder_ver]` will be added to the dataset. 
 We drop LAION instances which have lemmas from multiple synsets at this step.
 
 ## 3. Filter out LAION instances with low similarity to their synsets

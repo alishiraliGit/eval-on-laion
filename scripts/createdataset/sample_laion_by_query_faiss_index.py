@@ -10,7 +10,7 @@ from sklearn.preprocessing import normalize
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
-from core.foundationalmodels.clip import CLIP
+from core.foundationmodels.clip import CLIP
 from core.faiss_index import FaissIndex
 from core.queries import QueryType, select_queries
 from utils import pytorch_utils as ptu

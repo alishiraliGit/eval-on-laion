@@ -13,7 +13,7 @@ import configs
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
-from core.foundationalmodels.clip import CLIP
+from core.foundationmodels.clip import CLIP
 from core.queries import select_queries, QueryType
 
 

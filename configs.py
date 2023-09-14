@@ -17,6 +17,15 @@ class BertConfig:
     BATCH_SIZE = 64
 
 
+class TrOCRConfig:
+    DEFAULT_VERSION = 'trocr-base-stage1'
+
+
+class EASTConfig:
+    DEFAULT_VERSION = 'frozen_east_text_detection.pb'
+    BATCH_SIZE = 1
+
+
 class TextEncoderConfig:
     REPLACE_NA_STR = 'None'
 

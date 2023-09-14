@@ -15,7 +15,7 @@ from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils.ilsvrc_utils import load_lemmas_and_wnids
-from core.foundationalmodels.clip import CLIP
+from core.foundationmodels.clip import CLIP
 from core.queries import select_queries, QueryType
 
 
