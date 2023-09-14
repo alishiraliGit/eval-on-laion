@@ -5,6 +5,7 @@ import pickle
 import glob
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -47,6 +48,7 @@ if __name__ == '__main__':
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
+    parser.add_argument('--save_freq', type=int, default=1000)
 
     # Convert to dictionary
     params = vars(parser.parse_args())
@@ -81,6 +83,14 @@ if __name__ == '__main__':
     df = pd.read_parquet(subset_file_path)
 
     print_verbose(f'\tfound {len(df)} rows.')
+    print_verbose('done!\n')
+
+    # ----- Preprocess -----
+    print_verbose('preprocess ...')
+
+    # Find rows w/o similarity
+    df_todo = df.iloc[np.isnan(df[sim_col].tolist())]
+
     print_verbose('done!\n')
 
     # ----- Load maps and construct an inverse map -----
@@ -141,7 +151,8 @@ if __name__ == '__main__':
     text_encoder, text_encoder_batch_size = select_text_encoder(params['text_encoder_ver'])
 
     # ----- Loop over keys ------
-    laionindices = list(laionindex2query.keys())
+    laionindices = list(df_todo.index)
+    i_batch = 0
     for cnt in tqdm(range(0, len(laionindices), text_encoder_batch_size),
                     desc='calc. clip text to query similarity', disable=not logu.verbose):
 
@@ -153,19 +164,24 @@ if __name__ == '__main__':
         ].fillna(configs.TextEncoderConfig.REPLACE_NA_STR).tolist()
         queries_batch = df.loc[indices_batch, query_col].fillna(configs.TextEncoderConfig.REPLACE_NA_STR).tolist()
 
-        try:
-            # Get embeddings
-            text_embeds_batch = text_encoder(texts_batch)
-            query_embeds_batch = text_encoder(queries_batch)
+        # Get embeddings
+        text_embeds_batch = text_encoder(texts_batch)
+        query_embeds_batch = text_encoder(queries_batch)
 
-            # Find similarities
-            sims = utils.cosine_similarity(text_embeds_batch, query_embeds_batch).tolist()
+        # Find similarities
+        sims = utils.cosine_similarity(text_embeds_batch, query_embeds_batch).tolist()
 
-            # Update df
-            df.loc[indices_batch, sim_col] = sims
+        # Update df
+        df.loc[indices_batch, sim_col] = sims
 
-        except Exception as e:
-            print(str(e))
+        # Save
+        i_batch += 1
+        if i_batch % params['save_freq'] == 0:
+            print_verbose('saving ....')
+
+            df.to_parquet(subset_file_path, index=True)
+
+            print_verbose('done!\n')
 
     # ----- Save -----
     print_verbose('saving ...')
