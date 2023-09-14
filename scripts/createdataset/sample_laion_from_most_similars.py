@@ -29,7 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
 
     # Filtering
-    parser.add_argument('--similarity_col', type=str, default='text_to_name_def_wnid_similarity')
+    parser.add_argument('--similarity_col', type=str)
     parser.add_argument('--similarity_th', type=float, default=0.82)
 
     parser.add_argument('--remove_nsfw', action='store_true')

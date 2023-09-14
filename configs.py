@@ -22,7 +22,10 @@ class TrOCRConfig:
 
 
 class EASTConfig:
-    DEFAULT_VERSION = 'frozen_east_text_detection.pb'
+    URL = 'https://www.dropbox.com/s/r2ingd0l3zt8hxs/frozen_east_text_detection.tar.gz?dl=1'
+    DEFAULT_VERSION = 'frozen_east_text_detection'
+    DEFAULT_FILE_EXT = '.pb'
+    PATH = 'ext'
     BATCH_SIZE = 1
 
 

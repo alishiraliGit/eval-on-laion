@@ -2,20 +2,40 @@ import os
 import numpy as np
 import cv2
 from imutils.object_detection import non_max_suppression
+import urllib.request
 
 import configs
 from utils import cv2_utils as cv2u
+from utils.logging_utils import print_verbose
+from utils.utils import extract_tar_gz
 
 
 class EAST:
-    def __init__(self, path, ver=configs.EASTConfig.DEFAULT_VERSION):
+    def __init__(self, ver=configs.EASTConfig.DEFAULT_VERSION):
         self.ver = ver
 
-        self.net = cv2.dnn.readNet(os.path.join(path, ver))
+        self.net = cv2.dnn.readNet(os.path.join(configs.EASTConfig.PATH, ver + configs.EASTConfig.DEFAULT_FILE_EXT))
         self._layerNames = [
             'feature_fusion/Conv_7/Sigmoid',
             'feature_fusion/concat_3'
         ]
+
+    @staticmethod
+    def download(ver=configs.EASTConfig.DEFAULT_VERSION):
+        os.makedirs(configs.EASTConfig.PATH, exist_ok=True)
+        east_net_path = os.path.join(configs.EASTConfig.PATH, ver + configs.EASTConfig.DEFAULT_FILE_EXT)
+        if not os.path.exists(east_net_path):
+            print_verbose(f'downloading {ver} to {east_net_path} ...')
+
+            east_net_tar_path = os.path.join(configs.EASTConfig.PATH, ver + '.tar.gz')
+            urllib.request.urlretrieve(
+                url=configs.EASTConfig.URL,
+                filename=east_net_tar_path
+            )
+
+            extract_tar_gz(east_net_tar_path, configs.EASTConfig.PATH)
+
+            print_verbose('done!\n')
 
     @staticmethod
     def select_box(image_cv2, box):

@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import normalize
+import tarfile
 
 
 def find_inverse_map(maps):
@@ -53,6 +54,11 @@ def cosine_similarity(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     sims = np.sum(x_norm * y_norm, axis=1)
 
     return sims
+
+
+def extract_tar_gz(file_path, destination):
+    with tarfile.open(file_path, 'r:gz') as tar:
+        tar.extractall(path=destination)
 
 
 if __name__ == '__main__':

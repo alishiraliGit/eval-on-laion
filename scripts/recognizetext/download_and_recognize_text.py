@@ -32,11 +32,11 @@ text_detector: EAST = None
 text_recognizer: TrOCR = None
 
 
-def load_models(text_detector_path):
+def load_models():
     global text_detector, text_recognizer
 
     if text_detector is None:
-        text_detector = EAST(text_detector_path)
+        text_detector = EAST()
 
     if text_recognizer is None:
         text_recognizer = TrOCR()
@@ -61,7 +61,7 @@ def init_worker(pars):
     # Load the models
     print_verbose(f'loading text detector and recognizer in worker {worker_id} ...')
 
-    load_models(pars['text_detector_path'])
+    load_models()
 
     print_verbose('done!\n')
 
@@ -136,9 +136,6 @@ if __name__ == '__main__':
     parser.add_argument('--from_iloc', type=int, default=0)
     parser.add_argument('--to_iloc', type=int, default=-1)
 
-    # Predictors
-    parser.add_argument('--text_detector_path', type=str)
-
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=2)
     parser.add_argument('--n_process_recognition', type=int, default=6)
@@ -169,6 +166,9 @@ if __name__ == '__main__':
 
     # Recognized text column
     rec_text_col = 'recognized_text'
+
+    # Download EAST if required
+    EAST.download()
 
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')

@@ -46,3 +46,4 @@ imagenetv2-matched-frequency.parquet
 imagenetv2-threshold0.7.parquet
 imagenetv2-top-images.parquet
 imagenetv2/processed/labels
+ext
