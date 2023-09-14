@@ -61,6 +61,15 @@ def extract_tar_gz(file_path, destination):
         tar.extractall(path=destination)
 
 
+def intersect_lists(list1, list2):
+    set1 = set(list1)
+    set2 = set(list2)
+
+    intersection = set1.intersection(set2)
+
+    return list(intersection)
+
+
 if __name__ == '__main__':
     d = {'a': [1, 2, 3], 'b': 3}
 

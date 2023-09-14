@@ -153,7 +153,7 @@ if __name__ == '__main__':
     text_encoder, text_encoder_batch_size = select_text_encoder(params['text_encoder_ver'])
 
     # ----- Loop over keys ------
-    laionindices = list(df_todo.index)
+    laionindices = utils.intersect_lists(list(df_todo.index), list(laionindex2query.keys()))
     i_batch = 0
     for cnt in tqdm(range(0, len(laionindices), text_encoder_batch_size),
                     desc='calc. clip text to query similarity', disable=not logu.verbose):
