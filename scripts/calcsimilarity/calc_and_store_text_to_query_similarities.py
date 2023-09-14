@@ -89,6 +89,8 @@ if __name__ == '__main__':
     print_verbose('preprocess ...')
 
     # Find rows w/o similarity
+    if sim_col not in df:
+        df[sim_col] = np.nan
     df_todo = df.iloc[np.isnan(df[sim_col].tolist())]
 
     print_verbose('done!\n')
