@@ -178,7 +178,6 @@ def collect_recognition_results(rec_results):
 
 
 if __name__ == '__main__':
-    global latest_num_ready_results
     # multiprocessing.set_start_method('spawn')
 
     # ----- Get arguments from input -----
