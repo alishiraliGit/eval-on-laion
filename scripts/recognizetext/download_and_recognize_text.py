@@ -139,9 +139,10 @@ def collect_recognition_results(rec_results):
 
     for i_rec, res in enumerate(tqdm(rec_results, desc='collecting the results', leave=True)):
         try:
-            empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get(timeout=1)
+            empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get(timeout=10)
         except multiprocessing.TimeoutError as e:
             print_verbose('recognition pool went timeout for one job.')
+            print(str(e))
             continue
 
         # Append errors
