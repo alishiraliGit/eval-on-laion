@@ -150,13 +150,13 @@ def collect_recognition_results(rec_results):
     texts = []
     rec_error_indices = []
 
-    for i_pred, rec_res in tqdm(enumerate(rec_results), desc='collecting the results'):
-        empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = rec_res.get()
+    for i_pred, res in tqdm(enumerate(rec_results), desc='collecting the results'):
+        empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get()
 
         # Append errors
-        for error in rec_errors_i:
-            errors.append('\n' + error['cause'])
-            errors.append(str(error['error']))
+        for err in rec_errors_i:
+            errors.append('\n' + err['cause'])
+            errors.append(str(err['error']))
 
         empty_indices.extend(empty_indices_i)
         text_indices.extend(text_indices_i)
@@ -308,6 +308,7 @@ if __name__ == '__main__':
 
             # Collect the results and update the df
             collect_recognition_results(recognition_results)
+            recognition_results = []
 
             # Save
             print_verbose('saving ....')
@@ -350,6 +351,7 @@ if __name__ == '__main__':
 
     # ----- Collect the results ------
     collect_recognition_results(recognition_results)
+    recognition_results = []
 
     # ----- Save ------
     print_verbose('saving ....')
