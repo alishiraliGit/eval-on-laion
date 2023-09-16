@@ -34,6 +34,10 @@ def setup(ev):
 
 
 def download_image_wrapper(args):
+    global unpaused
+    while not unpaused.is_set():
+        time.sleep(1)
+
     idx, row = args
     try:
         img_content = download_image_content(row[configs.LAIONConfig.URL_COL])

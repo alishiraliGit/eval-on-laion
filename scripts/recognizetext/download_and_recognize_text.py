@@ -21,14 +21,7 @@ from core.ocr import TrOCR
 # Image download
 ###############
 
-from scripts.predict.download_and_predict import download_image_wrapper
-
-unpaused = None
-
-
-def setup(ev):
-    global unpaused
-    unpaused = ev
+from scripts.predict.download_and_predict import download_image_wrapper, unpaused, setup
 
 
 ###############
@@ -120,15 +113,9 @@ def num_ready_results(results):
     return sum([r.ready() for r in results])
 
 
-latest_num_ready_results = 0
-
-
 def update_recognition_pb(rec_pb, rec_results):
-    global latest_num_ready_results
-
     rec_pb.total = len(rec_results)
-    rec_pb.update(num_ready_results(rec_results) - latest_num_ready_results)
-    latest_num_ready_results = num_ready_results(rec_results)
+    rec_pb.n = num_ready_results
 
 
 ###############
@@ -150,7 +137,7 @@ def collect_recognition_results(rec_results):
     texts = []
     rec_error_indices = []
 
-    for i_pred, res in enumerate(tqdm(rec_results, desc='collecting the results')):
+    for i_pred, res in enumerate(tqdm(rec_results, desc='collecting the results', leave=True)):
         empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get()
 
         # Append errors
@@ -163,7 +150,7 @@ def collect_recognition_results(rec_results):
         texts.extend(texts_i)
         rec_error_indices.extend(rec_error_indices_i)
 
-    time.sleep(0.05)
+    time.sleep(1)
 
     # ----- Update df -----
     print_verbose('\n\nupdating the df ...')
@@ -311,7 +298,6 @@ if __name__ == '__main__':
             # Collect the results and update the df
             collect_recognition_results(recognition_results)
             recognition_results = []
-            latest_num_ready_results = 0
 
             # Save
             print_verbose('saving ....')
@@ -355,7 +341,6 @@ if __name__ == '__main__':
     # ----- Collect the results ------
     collect_recognition_results(recognition_results)
     recognition_results = []
-    latest_num_ready_results = 0
 
     # ----- Save ------
     print_verbose('saving ....')
