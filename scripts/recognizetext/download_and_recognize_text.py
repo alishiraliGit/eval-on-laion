@@ -21,7 +21,14 @@ from core.ocr import TrOCR
 # Image download
 ###############
 
-from scripts.predict.download_and_predict import unpaused, setup, download_image_wrapper
+from scripts.predict.download_and_predict import download_image_wrapper
+
+unpaused = None
+
+
+def setup(ev):
+    global unpaused
+    unpaused = ev
 
 
 ###############
@@ -71,29 +78,34 @@ def detect_and_recognize(args):
 
     idx_img_list = args
 
-    # Load the images
+    # Load the images and recognize
+    empty_inds = []
+    txt_inds = []
     txts = []
-    inds = []
+
+    err_inds = []
     errs = []
     for idx, img_content in idx_img_list:
         try:
             _, img_boxes = text_detector.detect_and_select_boxes(img_content, draw_box=False)
 
             if len(img_boxes) == 0:
+                empty_inds.append(idx)
                 continue
 
             txt = text_recognizer.recognize(img_boxes)
 
-            inds.append(idx)
+            txt_inds.append(idx)
             txts.append(txt)
 
         except Exception as e:
+            err_inds.append(idx)
             errs.append({
                 'cause': 'In detection or recognizing texts of a batch of images an error occurred.',
                 'error': e}
             )
 
-    return inds, txts, errs
+    return empty_inds, txt_inds, txts, err_inds, errs
 
 
 def dummy_func(_args):
@@ -117,6 +129,50 @@ def update_recognition_pb(rec_pb, rec_results):
     rec_pb.total = len(rec_results)
     rec_pb.update(num_ready_results(rec_results) - latest_num_ready_results)
     latest_num_ready_results = num_ready_results(rec_results)
+
+
+###############
+# Handle results
+###############
+
+def wait_for_recognition(rec_pb, rec_results):
+    global latest_num_ready_results
+
+    update_recognition_pb(rec_pb, rec_results)
+    while latest_num_ready_results < len(rec_results):
+        update_recognition_pb(rec_pb, rec_results)
+        time.sleep(0.05)
+
+
+def collect_recognition_results(rec_results):
+    empty_indices = []
+    text_indices = []
+    texts = []
+    rec_error_indices = []
+
+    for i_pred, rec_res in tqdm(enumerate(rec_results), desc='collecting the results'):
+        empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = rec_res.get()
+
+        # Append errors
+        for error in rec_errors_i:
+            errors.append('\n' + error['cause'])
+            errors.append(str(error['error']))
+
+        empty_indices.extend(empty_indices_i)
+        text_indices.extend(text_indices_i)
+        texts.extend(texts_i)
+        rec_error_indices.extend(rec_error_indices_i)
+
+    # ----- Update df -----
+    print_verbose('\n\nupdating the df ...')
+
+    df_all.loc[empty_indices, rec_text_col] = 'NO TEXT'
+
+    df_all.loc[text_indices, rec_text_col] = texts
+
+    df_all.loc[rec_error_indices, rec_text_col] = 'RECOGNITION ERROR'
+
+    print_verbose('done!\n')
 
 
 if __name__ == '__main__':
@@ -162,13 +218,16 @@ if __name__ == '__main__':
     # Prefix
     prefix = params['prefix']
 
-    print_verbose('done!\n')
-
     # Recognized text column
     rec_text_col = 'recognized_text'
 
     # Download EAST if required
     EAST.download()
+
+    # Logging
+    error_file_ver = time.strftime('%d-%m-%Y_%H-%M-%S')
+
+    print_verbose('done!\n')
 
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')
@@ -184,6 +243,9 @@ if __name__ == '__main__':
     else:
         df = df_all.iloc[params['from_iloc']:]
 
+    if rec_text_col in df:
+        df = df[df[rec_text_col].isnull()]
+
     print_verbose('done!\n')
 
     # ----- Init. parallel download and predict -----
@@ -198,9 +260,11 @@ if __name__ == '__main__':
     download_results = pool_download.imap(download_image_wrapper, df.iterrows())
     event.set()
 
-    # ----- Collect downloads and predict -----
+    # ----- Download and send for recognition -----
     download_ready_results = []
     recognition_results = []
+
+    download_error_indices = []
     errors = []
 
     recognition_pb = tqdm(desc='recognizing', leave=True)
@@ -210,6 +274,7 @@ if __name__ == '__main__':
         if error is not None:
             errors.append('\n' + error['cause'])
             errors.append(str(error['error']))
+            download_error_indices.append(index)
             continue
 
         # Append the downloaded image to the batch
@@ -217,7 +282,7 @@ if __name__ == '__main__':
         if len(download_ready_results) < configs.EASTConfig.BATCH_SIZE:
             continue
 
-        # Send the batch for prediction
+        # Send the batch for recognition
         rec_res = pool_recognition.apply_async(
             detect_and_recognize,
             [download_ready_results]
@@ -227,27 +292,50 @@ if __name__ == '__main__':
         # Empty current batch
         download_ready_results = []
 
-        # Monitor prediction progress
+        # Monitor recognition progress
         update_recognition_pb(recognition_pb, recognition_results)
 
-        # Wait for predictions
-        while len(recognition_results) - num_ready_results(recognition_results) > params['recognition_max_todo']:
+        # Wait for recognition
+        if len(recognition_results) - num_ready_results(recognition_results) > params['recognition_max_todo']:
             event.clear()
+
+            # Mark download errors
+            df_all.loc[download_error_indices, rec_text_col] = 'DOWNLOAD ERROR'
+            download_error_indices = []
+
+            # Wait for recognition
+            wait_for_recognition(recognition_pb, recognition_results)
+
+            # Collect the results and update the df
+            collect_recognition_results(recognition_results)
+
+            # Save
+            print_verbose('saving ....')
+
+            err_file_path = subset_file_path.replace('parquet', f'textrecognition_errors_{error_file_ver}.txt')
+            with open(err_file_path, 'w') as f:
+                f.write('\n'.join(errors))
+
+            df_all.to_parquet(subset_file_path, index=True)
+
+            print_verbose('done!\n')
+
             time.sleep(1)
+
         event.set()
 
-    # Send the remaining for prediction
+    # Mark download errors
+    df_all.loc[download_error_indices, rec_text_col] = 'DOWNLOAD ERROR'
+
+    # Send the remaining for recognition
     rec_res = pool_recognition.apply_async(
         detect_and_recognize,
         [download_ready_results]
     )
     recognition_results.append(rec_res)
 
-    # ----- Waiting for predictions -----
-    update_recognition_pb(recognition_pb, recognition_results)
-    while latest_num_ready_results < len(recognition_results):
-        update_recognition_pb(recognition_pb, recognition_results)
-        time.sleep(0.05)
+    # ----- Waiting for recognition -----
+    wait_for_recognition(recognition_pb, recognition_results)
 
     # ----- Close progress bars and processes -----
     recognition_pb.close()
@@ -261,27 +349,12 @@ if __name__ == '__main__':
     time.sleep(3)
 
     # ----- Collect the results ------
-    for i_pred, rec_res in tqdm(enumerate(recognition_results), desc='adding recognized texts to df'):
-        success_indices_i, texts_i, rec_errors_i = rec_res.get()
+    collect_recognition_results(recognition_results)
 
-        # Append errors
-        for error in rec_errors_i:
-            errors.append('\n' + error['cause'])
-            errors.append(str(error['error']))
-
-        # Check for fatal error
-        if len(success_indices_i) == 0:
-            continue
-
-        # Add texts to the df
-        df_all.loc[success_indices_i, rec_text_col] = texts_i
-
-    # ----- Save the successful predictions ------
+    # ----- Save ------
     print_verbose('saving ....')
 
-    ver = time.strftime('%d-%m-%Y_%H-%M-%S')
-
-    err_file_path = subset_file_path.replace('parquet', 'textrecognition_errors.txt')
+    err_file_path = subset_file_path.replace('parquet', f'textrecognition_errors_{error_file_ver}.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 

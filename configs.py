@@ -27,7 +27,7 @@ class EASTConfig:
     DEFAULT_FILE_EXT = '.pb'
     PATH = 'ext'
     BATCH_SIZE = 1
-    MAX_NUM_BOXES = 200
+    MAX_NUM_BOXES = 100
 
 
 class TextEncoderConfig:

@@ -156,7 +156,7 @@ if __name__ == '__main__':
     laionindices = utils.intersect_lists(list(df_todo.index), list(laionindex2query.keys()))
     i_batch = 0
     for cnt in tqdm(range(0, len(laionindices), text_encoder_batch_size),
-                    desc='calc. clip text to query similarity', disable=not logu.verbose):
+                    desc='calc. text to query similarity', disable=not logu.verbose):
 
         indices_batch = laionindices[cnt: (cnt + text_encoder_batch_size)]
 
