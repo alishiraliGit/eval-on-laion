@@ -123,10 +123,10 @@ def update_recognition_pb(rec_pb, rec_results):
 # Handle results
 ###############
 
-def wait_for_recognition(rec_pb, rec_results):
+def wait_for_recognition(rec_pb, rec_results, margin=10):
     update_recognition_pb(rec_pb, rec_results)
 
-    while num_ready_results(rec_results) < len(rec_results):
+    while num_ready_results(rec_results) < len(rec_results) - margin:
         update_recognition_pb(rec_pb, rec_results)
         time.sleep(0.1)
 
@@ -137,8 +137,12 @@ def collect_recognition_results(rec_results):
     texts = []
     rec_error_indices = []
 
-    for i_pred, res in enumerate(tqdm(rec_results, desc='collecting the results', leave=True)):
-        empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get()
+    for i_rec, res in enumerate(tqdm(rec_results, desc='collecting the results', leave=True)):
+        try:
+            empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get(timeout=1)
+        except multiprocessing.TimeoutError as e:
+            print_verbose('recognition pool went timeout for one job.')
+            continue
 
         # Append errors
         for err in rec_errors_i:
@@ -327,6 +331,10 @@ if __name__ == '__main__':
     # ----- Waiting for recognition -----
     wait_for_recognition(recognition_pb, recognition_results)
 
+    # ----- Collect the results ------
+    collect_recognition_results(recognition_results)
+    recognition_results = []
+
     # ----- Close progress bars and processes -----
     recognition_pb.close()
 
@@ -337,10 +345,6 @@ if __name__ == '__main__':
     pool_recognition.join()
 
     time.sleep(3)
-
-    # ----- Collect the results ------
-    collect_recognition_results(recognition_results)
-    recognition_results = []
 
     # ----- Save ------
     print_verbose('saving ....')
