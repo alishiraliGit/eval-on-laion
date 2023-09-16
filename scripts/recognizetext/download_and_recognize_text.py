@@ -115,7 +115,7 @@ def num_ready_results(results):
 
 def update_recognition_pb(rec_pb, rec_results):
     rec_pb.total = len(rec_results)
-    rec_pb.n = num_ready_results
+    rec_pb.n = num_ready_results(rec_results)
 
 
 ###############
@@ -123,12 +123,11 @@ def update_recognition_pb(rec_pb, rec_results):
 ###############
 
 def wait_for_recognition(rec_pb, rec_results):
-    global latest_num_ready_results
-
     update_recognition_pb(rec_pb, rec_results)
-    while latest_num_ready_results < len(rec_results):
+
+    while num_ready_results(rec_results) < len(rec_results):
         update_recognition_pb(rec_pb, rec_results)
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 
 def collect_recognition_results(rec_results):
