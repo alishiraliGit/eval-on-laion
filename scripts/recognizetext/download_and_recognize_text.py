@@ -150,7 +150,7 @@ def collect_recognition_results(rec_results):
     texts = []
     rec_error_indices = []
 
-    for i_pred, res in tqdm(enumerate(rec_results), desc='collecting the results'):
+    for i_pred, res in enumerate(tqdm(rec_results, desc='collecting the results')):
         empty_indices_i, text_indices_i, texts_i, rec_error_indices_i, rec_errors_i = res.get()
 
         # Append errors
@@ -162,6 +162,8 @@ def collect_recognition_results(rec_results):
         text_indices.extend(text_indices_i)
         texts.extend(texts_i)
         rec_error_indices.extend(rec_error_indices_i)
+
+    time.sleep(0.05)
 
     # ----- Update df -----
     print_verbose('\n\nupdating the df ...')
@@ -176,6 +178,7 @@ def collect_recognition_results(rec_results):
 
 
 if __name__ == '__main__':
+    global latest_num_ready_results
     # multiprocessing.set_start_method('spawn')
 
     # ----- Get arguments from input -----
@@ -309,6 +312,7 @@ if __name__ == '__main__':
             # Collect the results and update the df
             collect_recognition_results(recognition_results)
             recognition_results = []
+            latest_num_ready_results = 0
 
             # Save
             print_verbose('saving ....')
@@ -352,6 +356,7 @@ if __name__ == '__main__':
     # ----- Collect the results ------
     collect_recognition_results(recognition_results)
     recognition_results = []
+    latest_num_ready_results = 0
 
     # ----- Save ------
     print_verbose('saving ....')
