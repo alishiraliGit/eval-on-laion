@@ -116,6 +116,7 @@ def num_ready_results(results):
 def update_recognition_pb(rec_pb, rec_results):
     rec_pb.total = len(rec_results)
     rec_pb.n = num_ready_results(rec_results)
+    rec_pb.refresh()
 
 
 ###############
