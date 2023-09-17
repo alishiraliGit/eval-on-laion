@@ -19,9 +19,11 @@ class TrOCR:
 
         pixel_values.to(ptu.device)
 
+        print('ptu:')
+        print(ptu.device)
         print('pixel_values:')
         print(pixel_values.device)
-        print('\nmodel:')
+        print('model:')
         print(self.model.device)
 
         with torch.no_grad():
