@@ -197,6 +197,7 @@ if __name__ == '__main__':
 
     # Logging
     parser.add_argument('--no_verbose', dest='verbose', action='store_false')
+    parser.add_argument('--change_ver_freq', type=int, default=10)
 
     # Convert to dictionary
     params = vars(parser.parse_args())
@@ -219,7 +220,7 @@ if __name__ == '__main__':
     EAST.download()
 
     # Logging
-    error_file_ver = time.strftime('%d-%m-%Y_%H-%M-%S')
+    file_ver = time.strftime('%d-%m-%Y_%H-%M-%S')
 
     print_verbose('done!\n')
 
@@ -262,6 +263,7 @@ if __name__ == '__main__':
     errors = []
 
     recognition_pb = tqdm(desc='recognizing', leave=True)
+    save_cnt = 0
     for down_res in tqdm(download_results, desc='(mostly) downloading', total=len(df), leave=True):
         # Catch the errors in downloading
         index, image_content, error = down_res
@@ -307,11 +309,17 @@ if __name__ == '__main__':
             # Save
             print_verbose('saving ....')
 
-            err_file_path = subset_file_path.replace('parquet', f'textrecognition_errors_{error_file_ver}.txt')
+            save_cnt += 1
+
+            if save_cnt % params['change_ver_freq'] == 0:
+                file_ver = time.strftime('%d-%m-%Y_%H-%M-%S')
+
+            err_file_path = subset_file_path.replace('snappy.parquet', f'textrecognition_errors_{file_ver}.txt')
             with open(err_file_path, 'w') as f:
                 f.write('\n'.join(errors))
 
-            df_all.to_parquet(subset_file_path, index=True)
+            save_subset_file_path = subset_file_path.replace('.snappy', f'_{file_ver}.snappy')
+            df_all.to_parquet(save_subset_file_path, index=True)
 
             print_verbose('done!\n')
 
@@ -350,10 +358,11 @@ if __name__ == '__main__':
     # ----- Save ------
     print_verbose('saving ....')
 
-    err_file_path = subset_file_path.replace('parquet', f'textrecognition_errors_{error_file_ver}.txt')
+    err_file_path = subset_file_path.replace('parquet', f'textrecognition_errors_{file_ver}.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
-    df_all.to_parquet(subset_file_path, index=True)
+    save_subset_file_path = subset_file_path.replace('.snappy', f'_{file_ver}.snappy')
+    df_all.to_parquet(save_subset_file_path, index=True)
 
     print_verbose('done!\n')
