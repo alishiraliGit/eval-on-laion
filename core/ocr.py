@@ -17,7 +17,7 @@ class TrOCR:
     def recognize(self, image_boxes) -> str:
         pixel_values = self.processor(images=image_boxes, return_tensors='pt').pixel_values
 
-        pixel_values.to(ptu.device)
+        pixel_values = ptu.from_numpy(pixel_values)
 
         print('ptu:')
         print(ptu.device)

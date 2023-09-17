@@ -5,7 +5,6 @@ import time
 import argparse
 import pandas as pd
 from tqdm.auto import tqdm
-import traceback
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
