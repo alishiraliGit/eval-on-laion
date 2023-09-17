@@ -5,6 +5,7 @@ import time
 import argparse
 import pandas as pd
 from tqdm.auto import tqdm
+import traceback
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -97,7 +98,7 @@ def detect_and_recognize(args):
                 'cause': 'In detection or recognizing texts of a batch of images an error occurred.',
                 'error': e}
             )
-            raise e
+            traceback.print_exc()
 
     return empty_inds, txt_inds, txts, err_inds, errs
 
