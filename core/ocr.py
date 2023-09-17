@@ -19,6 +19,8 @@ class TrOCR:
 
         print('pixel_values (before):')
         print(pixel_values.device)
+        print(type(pixel_values))
+        print(pixel_values.shape)
 
         pixel_values.to(ptu.device)
 
