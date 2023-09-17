@@ -24,7 +24,7 @@ class CLIP:
     def similarities(self, texts, images) -> np.ndarray:
         inputs = self.processor(text=texts, images=images, return_tensors='pt', padding=True, truncation=True)
 
-        inputs.to(ptu.device)
+        inputs = inputs.to(ptu.device)
 
         with torch.no_grad():
             outputs = self.model(**inputs)

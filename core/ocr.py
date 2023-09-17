@@ -17,19 +17,7 @@ class TrOCR:
     def recognize(self, image_boxes) -> str:
         pixel_values = self.processor(images=image_boxes, return_tensors='pt').pixel_values
 
-        print('pixel_values (before):')
-        print(pixel_values.device)
-        print(type(pixel_values))
-        print(pixel_values.shape)
-
-        pixel_values.to(ptu.device)
-
-        print('ptu:')
-        print(ptu.device)
-        print('pixel_values:')
-        print(pixel_values.device)
-        print('model:')
-        print(self.model.device)
+        pixel_values = pixel_values.to(ptu.device)
 
         with torch.no_grad():
             generated_ids = self.model.generate(pixel_values, max_new_tokens=20)
