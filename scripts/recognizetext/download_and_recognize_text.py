@@ -98,7 +98,6 @@ def detect_and_recognize(args):
                 'cause': 'In detection or recognizing texts of a batch of images an error occurred.',
                 'error': e}
             )
-            traceback.print_exc()
 
     return empty_inds, txt_inds, txts, err_inds, errs
 

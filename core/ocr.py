@@ -19,6 +19,9 @@ class TrOCR:
 
         pixel_values.to(ptu.device)
 
+        print(pixel_values.device)
+        print(self.model.device)
+
         with torch.no_grad():
             generated_ids = self.model.generate(pixel_values, max_new_tokens=20)
 
