@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # Filtering
     parser.add_argument('--similarity_col', type=str)
-    parser.add_argument('--similarity_th', type=float, default=0.82)
+    parser.add_argument('--similarity_th', type=float, default=0.82, help='0.82 for CLIP-base, 0.97 for Bert-base')
 
     parser.add_argument('--remove_nsfw', action='store_true')
 

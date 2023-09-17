@@ -314,7 +314,7 @@ if __name__ == '__main__':
             if save_cnt % params['change_ver_freq'] == 0:
                 file_ver = time.strftime('%d-%m-%Y_%H-%M-%S')
 
-            err_file_path = subset_file_path.replace('snappy.parquet', f'textrecognition_errors_{file_ver}.txt')
+            err_file_path = subset_file_path.replace('.snappy.parquet', f'_{file_ver}_textrecognition_errors.txt')
             with open(err_file_path, 'w') as f:
                 f.write('\n'.join(errors))
 
