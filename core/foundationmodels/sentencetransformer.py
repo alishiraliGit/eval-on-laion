@@ -14,6 +14,6 @@ class SentTransformer:
 
     def text_embeds(self, texts) -> np.ndarray:
         with torch.no_grad():
-            text_embeds = self.model(texts)
+            text_embeds = self.model.encode(texts)
 
             return text_embeds
