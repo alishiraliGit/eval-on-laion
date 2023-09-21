@@ -1,6 +1,7 @@
 import configs
 from core.foundationmodels.clip import CLIP
 from core.foundationmodels.bert import Bert
+from core.foundationmodels.sentencetransformer import SentTransformer
 
 encoder_ver = None
 encoder = None
@@ -28,6 +29,10 @@ def select_text_encoder(ver:  str):
         encoder_batch_size = configs.BertConfig.BATCH_SIZE
 
     else:
-        raise Exception(f'{ver} is an invalid encoder version!')
+        sent_trans = SentTransformer(ver=ver)
+
+        encoder = sent_trans.text_embeds
+        encoder_ver = ver
+        encoder_batch_size = configs.SentTransformer.BATCH_SIZE
 
     return encoder, encoder_batch_size

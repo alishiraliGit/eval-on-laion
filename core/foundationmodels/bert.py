@@ -18,7 +18,7 @@ class Bert:
     def text_embeds(self, texts) -> np.ndarray:
         tok_texts = self.tokenizer(texts, return_tensors='pt', padding=True, truncation=True)
 
-        tok_texts.to(ptu.device)
+        tok_texts = tok_texts.to(ptu.device)
 
         with torch.no_grad():
             text_outputs = self.model(**tok_texts)

@@ -17,6 +17,11 @@ class BertConfig:
     BATCH_SIZE = 64
 
 
+class SentTransformer:
+    DEFAULT_VERSION = 'all-mpnet-base-v2'
+    BATCH_SIZE = 64
+
+
 class TrOCRConfig:
     DEFAULT_VERSION = 'trocr-base-stage1'
 

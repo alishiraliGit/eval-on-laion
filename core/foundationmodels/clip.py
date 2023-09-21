@@ -37,7 +37,7 @@ class CLIP:
     def text_embeds(self, texts) -> np.ndarray:
         inputs = self.text_processor(texts, return_tensors='pt', padding=True, truncation=True)
 
-        inputs.to(ptu.device)
+        inputs = inputs.to(ptu.device)
 
         with torch.no_grad():
             text_outputs = self.model.text_model(**inputs)
@@ -49,7 +49,7 @@ class CLIP:
     def image_embeds(self, images) -> np.ndarray:
         inputs = self.image_processor(images, return_tensors='pt')
 
-        inputs.to(ptu.device)
+        inputs = inputs.to(ptu.device)
 
         with torch.no_grad():
             image_outputs = self.model.vision_model(**inputs)
