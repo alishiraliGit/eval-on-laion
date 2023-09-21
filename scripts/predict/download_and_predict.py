@@ -186,6 +186,7 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
+    parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--ilsvrc_synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
@@ -194,9 +195,6 @@ if __name__ == '__main__':
     # Subset
     parser.add_argument('--from_iloc', type=int, default=0)
     parser.add_argument('--to_iloc', type=int, default=-1)
-
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Predictors
     parser.add_argument('--predictors', type=str, default='selected')
@@ -225,7 +223,7 @@ if __name__ == '__main__':
     os.makedirs(params['save_path'], exist_ok=True)
 
     # Prefix
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    prefix = params['prefix']
 
     # Load model names
     load_models(params['predictors'], do_init=False)
@@ -235,9 +233,10 @@ if __name__ == '__main__':
     # ----- Load LAION subset -----
     print_verbose('loading laion subset ...')
 
-    subset_file_name = prefix + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+    df = pd.read_parquet(subset_file_path)
 
     # Subset
     if params['to_iloc'] > 0:
@@ -352,12 +351,12 @@ if __name__ == '__main__':
 
     ver = time.strftime('%d-%m-%Y_%H-%M-%S')
 
-    err_file_name = prefix + f'errors_{ver}.txt'
+    err_file_name = prefix + '_' + f'errors_{ver}.txt'
     with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
     for model_name in model_names:
-        pred_file_name = prefix + f'{model_name}_predictions_{ver}.csv'
+        pred_file_name = prefix + '_' + f'{model_name}_predictions_{ver}.csv'
         model2pred[model_name].to_csv(os.path.join(params['save_path'], pred_file_name), index=True)
 
     print_verbose('done!\n')
