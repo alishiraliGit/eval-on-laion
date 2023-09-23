@@ -7,10 +7,12 @@ from PIL import Image
 from io import BytesIO
 import pandas as pd
 from tqdm.auto import tqdm
+import glob
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
+from utils import utils
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
@@ -246,6 +248,42 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
+    # ----- Load previous predictions in save_path ------
+    print_verbose('loading previous predictions ...')
+
+    previous_laionindices = None
+    for model_name in model_names:
+        print_verbose(f'\tloading previous predictions of {model_name} ...')
+
+        preds_file_name = prefix + '_' + f'{model_name}_predictions_*.csv'
+        preds_file_path = glob.glob(os.path.join(params['save_path'], preds_file_name))
+
+        print_verbose(f'\tfound {len(preds_file_path)} previous predictions.')
+
+        for pred_file_path in preds_file_path:
+            print_verbose(f'\t\tloading {pred_file_path} ...')
+
+            pred_df = pd.read_csv(
+                pred_file_path,
+                index_col=0,
+                dtype={str(cnt): str for cnt in range(5)}
+            )
+
+            print_verbose(f'\t\tfound {len(pred_df)} rows.\n')
+
+            if previous_laionindices is None:
+                previous_laionindices = pred_df.index
+            else:
+                previous_laionindices = utils.intersect_lists(previous_laionindices, pred_df.index)
+
+    print_verbose(f'found {len(previous_laionindices)} previous laion indices with predictions.')
+
+    print_verbose('dropping these indices ...')
+
+    df.drop(previous_laionindices, inplace=True)
+
+    print_verbose('done!')
+
     # ----- Init. parallel download and predict -----
     event = multiprocessing.Event()
     pool_download = multiprocessing.Pool(params['n_process_download'], setup, (event,))
@@ -264,37 +302,42 @@ if __name__ == '__main__':
     errors = []
 
     prediction_pb = tqdm(desc='predicting', leave=True)
-    for down_res in tqdm(download_results, desc='(mostly) downloading', total=len(df), leave=True):
-        # Catch the errors in downloading
-        index, image_content, error = down_res
-        if error is not None:
-            errors.append('\n' + error['cause'])
-            errors.append(str(error['error']))
-            continue
+    try:
+        for down_res in tqdm(download_results, desc='(mostly) downloading', total=len(df), leave=True):
+            # Catch the errors in downloading
+            index, image_content, error = down_res
+            if error is not None:
+                errors.append('\n' + error['cause'])
+                errors.append(str(error['error']))
+                continue
 
-        # Append the downloaded image to the batch
-        download_ready_results.append([index, image_content])
-        if len(download_ready_results) < configs.ILSVRCPredictorsConfig.BATCH_SIZE:
-            continue
+            # Append the downloaded image to the batch
+            download_ready_results.append([index, image_content])
+            if len(download_ready_results) < configs.ILSVRCPredictorsConfig.BATCH_SIZE:
+                continue
 
-        # Send the batch for prediction
-        pred_res = pool_predict.apply_async(
-            predict,
-            [download_ready_results]
-        )
-        prediction_results.append(pred_res)
+            # Send the batch for prediction
+            pred_res = pool_predict.apply_async(
+                predict,
+                [download_ready_results]
+            )
+            prediction_results.append(pred_res)
 
-        # Empty current batch
-        download_ready_results = []
+            # Empty current batch
+            download_ready_results = []
 
-        # Monitor prediction progress
-        update_pred_pb(prediction_pb, prediction_results)
+            # Monitor prediction progress
+            update_pred_pb(prediction_pb, prediction_results)
 
-        # Wait for predictions
-        while len(prediction_results) - num_ready_results(prediction_results) > params['pred_max_todo']:
-            event.clear()
-            time.sleep(1)
-        event.set()
+            # Wait for predictions
+            while len(prediction_results) - num_ready_results(prediction_results) > params['pred_max_todo']:
+                event.clear()
+                time.sleep(1)
+            event.set()
+    except Exception as e:
+        print_verbose('sth went wrong in the big loop!')
+        print_verbose(str(e))
+        print_verbose('proceed with the available results so far.')
 
     # Send the remaining for prediction
     pred_res = pool_predict.apply_async(
