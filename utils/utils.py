@@ -70,6 +70,15 @@ def intersect_lists(list1, list2):
     return list(intersection)
 
 
+def union_lists(list1, list2):
+    set1 = set(list1)
+    set2 = set(list2)
+
+    union = set1.union(set2)
+
+    return list(union)
+
+
 if __name__ == '__main__':
     d = {'a': [1, 2, 3], 'b': 3}
 

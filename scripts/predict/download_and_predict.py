@@ -251,7 +251,7 @@ if __name__ == '__main__':
     # ----- Load previous predictions in save_path ------
     print_verbose('loading previous predictions ...')
 
-    previous_laionindices = None
+    previous_laionindices = df.index
     for model_name in model_names:
         print_verbose(f'\tloading previous predictions of {model_name} ...')
 
@@ -260,6 +260,7 @@ if __name__ == '__main__':
 
         print_verbose(f'\tfound {len(preds_file_path)} previous predictions.')
 
+        prev_laionindices_model = []
         for pred_file_path in preds_file_path:
             print_verbose(f'\t\tloading {pred_file_path} ...')
 
@@ -271,21 +272,17 @@ if __name__ == '__main__':
 
             print_verbose(f'\t\tfound {len(pred_df)} rows.\n')
 
-            if previous_laionindices is None:
-                previous_laionindices = pred_df.index
-            else:
-                previous_laionindices = utils.intersect_lists(previous_laionindices, pred_df.index)
+            prev_laionindices_model = utils.union_lists(previous_laionindices, pred_df.index)
 
-    if previous_laionindices is not None:
-        print_verbose(f'found {len(previous_laionindices)} previous laion indices with predictions.')
+        previous_laionindices = utils.intersect_lists(previous_laionindices, prev_laionindices_model)
 
-        print_verbose('dropping these indices ...')
+    print_verbose(f'found {len(previous_laionindices)} previous laion indices with predictions.')
 
-        df.drop(previous_laionindices, inplace=True)
+    print_verbose('dropping these indices ...')
 
-        print_verbose('done!')
-    else:
-        print_verbose('found no previous predictions.')
+    df.drop(previous_laionindices, inplace=True)
+
+    print_verbose('done!')
 
     # ----- Init. parallel download and predict -----
     event = multiprocessing.Event()
