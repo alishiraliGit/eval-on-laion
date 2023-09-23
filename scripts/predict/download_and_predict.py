@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
             print_verbose(f'\t\tfound {len(pred_df)} rows.\n')
 
-            prev_laionindices_model = utils.union_lists(previous_laionindices, pred_df.index)
+            prev_laionindices_model = utils.union_lists(prev_laionindices_model, pred_df.index)
 
         previous_laionindices = utils.intersect_lists(previous_laionindices, prev_laionindices_model)
 
