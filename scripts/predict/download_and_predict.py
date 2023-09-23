@@ -276,13 +276,16 @@ if __name__ == '__main__':
             else:
                 previous_laionindices = utils.intersect_lists(previous_laionindices, pred_df.index)
 
-    print_verbose(f'found {len(previous_laionindices)} previous laion indices with predictions.')
+    if previous_laionindices is not None:
+        print_verbose(f'found {len(previous_laionindices)} previous laion indices with predictions.')
 
-    print_verbose('dropping these indices ...')
+        print_verbose('dropping these indices ...')
 
-    df.drop(previous_laionindices, inplace=True)
+        df.drop(previous_laionindices, inplace=True)
 
-    print_verbose('done!')
+        print_verbose('done!')
+    else:
+        print_verbose('found no previous predictions.')
 
     # ----- Init. parallel download and predict -----
     event = multiprocessing.Event()
