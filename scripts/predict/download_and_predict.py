@@ -237,7 +237,6 @@ if __name__ == '__main__':
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
-    df = df.iloc[:100]
 
     # Subset
     if params['to_iloc'] > 0:
