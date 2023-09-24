@@ -133,8 +133,6 @@ if __name__ == '__main__':
     else:
         df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
-    df = df.iloc[:10]
-
     print_verbose('done!\n')
 
     # ----- Preprocess -----
@@ -228,7 +226,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_name = prefix + '_' + f'imgallqueriessim_errors_{params["clip_ver"]}.txt'
+    err_file_name = configs.NamingConfig.append_with_sims_to_all_queries(prefix, params['clip_ver']) + '_errors.txt'
     with open(os.path.join(params['laion_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
