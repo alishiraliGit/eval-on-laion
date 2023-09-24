@@ -334,10 +334,14 @@ if __name__ == '__main__':
                 event.clear()
                 time.sleep(1)
             event.set()
+
+        success = True
     except Exception as e:
         print_verbose('sth went wrong in the big loop!')
         print_verbose(str(e))
         print_verbose('proceed with the available results so far.')
+
+        success = False
 
     # Send the remaining for prediction
     pred_res = pool_predict.apply_async(
@@ -396,6 +400,9 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Close progress bars and processes -----
+    if not success:
+        raise Exception('sth went wrong in download_and_predict.')
+
     prediction_pb.close()
 
     pool_download.close()
