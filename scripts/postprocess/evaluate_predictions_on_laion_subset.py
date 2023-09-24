@@ -10,6 +10,7 @@ from tqdm.auto import tqdm
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
 import configs
+from utils import utils
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import laion_utils as laionu
@@ -23,16 +24,14 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
+    parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_file_name', type=str, default='wnid2laionindices(substring_matched).pkl')
+    parser.add_argument('--labels_key', type=str, default='wnid', help='currently, only wnid supported.')  # TODO
 
     parser.add_argument('--predictions_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'ilsvrc_predictions'))
     parser.add_argument('--predictions_ver', type=str, default='*')
-
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Predictors
     parser.add_argument('--predictors', type=str, default='selected')
@@ -49,7 +48,7 @@ if __name__ == '__main__':
     print_verbose('initializing ...')
 
     # Set the files prefix
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    prefix = params['prefix']
 
     # Choose models
     model_names, _, _ = load_models(params['predictors'], do_init=False)
@@ -62,8 +61,8 @@ if __name__ == '__main__':
     print_verbose('loading laion subset ...')
 
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
-    subset_file_name = prefix + file_name_wo_prefix
-    subset_pred_file_name = prefix + configs.LAIONConfig.PREDICTED_PREFIX + file_name_wo_prefix
+    subset_file_name = prefix + '_' + file_name_wo_prefix
+    subset_pred_file_name = configs.NamingConfig.append_predicted(prefix) + '_' + file_name_wo_prefix
 
     if os.path.exists(os.path.join(params['laion_path'], subset_pred_file_name)):
         print_verbose('\tfound a file already containing predictions:')
@@ -81,7 +80,8 @@ if __name__ == '__main__':
     # ----- Load labels (maps) -----
     print_verbose('loading labels ...')
 
-    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
+    labels_file_name = f'{params["labels_key"]}2laionindices({prefix}).pkl'
+    with open(os.path.join(params['labels_path'], labels_file_name), 'rb') as f:
         wnid2laionindices = pickle.load(f)
 
     print_verbose('done!\n')
@@ -91,33 +91,42 @@ if __name__ == '__main__':
 
     model2predictions = {}
     for model_name in model_names:
-        pred_file_path = glob.glob(os.path.join(
-            params['predictions_path'],
-            prefix + f'{model_name}_predictions_{params["predictions_ver"]}.csv'))
-        assert len(pred_file_path) == 1, 'found ' + '\n'.join(pred_file_path)
-        pred_file_path = pred_file_path[0]
+        pred_file_name = prefix + '_' + f'{model_name}_predictions_{params["predictions_ver"]}.csv'
+        pred_file_paths = glob.glob(os.path.join(params['predictions_path'], pred_file_name))
 
-        print_verbose(f'\tloading {pred_file_path} ...')
+        assert len(pred_file_paths) > 0, f'found no predictions for {model_name}.'
 
-        model2predictions[model_name] = pd.read_csv(
-            pred_file_path,
-            index_col=0,
-            dtype={str(cnt): str for cnt in range(5)}
-        )
+        print_verbose(f'\tfound {len(pred_file_paths)} prediction files for {model_name}.')
 
-        print_verbose(f'\tfound {len(model2predictions[model_name])} rows.\n')
+        pred_dfs = []
+        for pred_file_path in pred_file_paths:
+            print_verbose(f'\t\tloading {pred_file_path} ...')
+
+            pred_df = pd.read_csv(
+                pred_file_path,
+                index_col=0,
+                dtype={str(cnt): str for cnt in range(5)}
+            )
+
+            print_verbose(f'\t\tfound {len(pred_df)} rows.\n')
+
+            pred_dfs.append(pred_df)
+
+        pred_df_concat = pd.concat(pred_dfs)
+
+        # Drop duplicate indices (keep only the first occurrence)
+        pred_df_concat = pred_df_concat[~pred_df_concat.index.duplicated(keep='first')]
+
+        print_verbose(f'\tfound overall {len(pred_df_concat)} unique rows.\n')
+
+        model2predictions[model_name] = pred_df_concat
 
     print_verbose('done!\n')
 
     # ----- Find the inverse map -----
     print_verbose('finding all labels assigned to an example ...')
 
-    laionindex2wnids = {}
-    for wnid, indices in wnid2laionindices.items():
-        for idx in indices:
-            if idx not in laionindex2wnids:
-                laionindex2wnids[idx] = []
-            laionindex2wnids[idx].append(wnid)
+    laionindex2wnids = utils.find_inverse_map(wnid2laionindices)
 
     # Log
     avg_wnids_per_img = np.mean([len(wnids) for _, wnids in laionindex2wnids.items()])
@@ -136,9 +145,6 @@ if __name__ == '__main__':
     col2indices = {}
     col2values = {}
     for idx in tqdm(df.index):
-        if idx not in laionindex2wnids:
-            continue
-
         wnids = laionindex2wnids[idx]
 
         for model_name in model_names:

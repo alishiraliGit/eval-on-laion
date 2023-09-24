@@ -29,7 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_filter', type=str, default='*')
+    parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
 
     parser.add_argument('--lemma2wnid_path', type=str,
                         default=os.path.join('ilsvrc2012', 'processed',

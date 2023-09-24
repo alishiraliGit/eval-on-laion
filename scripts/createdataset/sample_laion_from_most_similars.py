@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
+    parser.add_argument('--labels_key', type=str, default='wnid', help='wnid or lemma.')
 
     # Filtering
     parser.add_argument('--similarity_col', type=str)
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     save_prefix = configs.NamingConfig.append_filtered(prefix, params['similarity_col'])
 
     # Save labels
-    labels_file_name = f'wnid2laionindices({save_prefix}).pkl'
+    labels_file_name = f'{params["labels_key"]}2laionindices({prefix}).pkl'
 
     with open(os.path.join(params['labels_path'], labels_file_name), open_type) as f:
         pickle.dump(key2laionindices_sampled, f)

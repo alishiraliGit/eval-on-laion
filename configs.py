@@ -64,6 +64,10 @@ class NamingConfig:
     def append_filtered(prefix, similarity_col):
         return prefix + f'_filt({similarity_col})'
 
+    @staticmethod
+    def append_predicted(prefix):
+        return prefix + '_predicted'
+
 
 class LAIONConfig:
     URL_BASE = 'https://deploy.laion.ai/8f83b608504d46bb81708ec86e912220/dataset/'
@@ -84,7 +88,6 @@ class LAIONConfig:
     SUBSET_IC_MOST_SIMILAR_TXT_TXT_PREFIX = 'subset_ic_most_sim_txttxt_'
     SUBSET_IC_MOST_SIMILAR_TXT_TXT_WITH_SIMILAR_LABELS_PREFIX = 'subset_ic_most_sim_txttxt_sim_labels_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
-    PREDICTED_PREFIX = 'predicted_'
 
     @staticmethod
     def method_to_prefix(method):
