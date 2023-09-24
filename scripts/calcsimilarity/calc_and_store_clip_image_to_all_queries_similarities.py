@@ -59,14 +59,15 @@ if __name__ == '__main__':
     # Path
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
+    parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
 
     parser.add_argument('--synsets_path', type=str, default=os.path.join('ilsvrc2012', 'ILSVRC2012_synsets.txt'))
 
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
-
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
+
+    # CLIP version
+    parser.add_argument('--clip_ver', type=str, default=configs.CLIPConfig.DEFAULT_VERSION)
 
     # Multiprocessing
     parser.add_argument('--n_process_download', type=int, default=6)
@@ -91,21 +92,20 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Prefix/Postfix
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
-    postfix = 'with_sims_to_all_queries'
+    prefix = params['prefix']
 
     # Query
     query_func = select_queries([params['query_type']])[0]
 
     # Column names
-    image_to_query_col_func = lambda w: f'image_to_{params["query_type"]}_{w}_similarity'
+    image_to_query_col_func = lambda w: f'image_to_{params["query_type"]}_{w}_similarity_{params["clip_ver"]}'
 
     print_verbose('done!\n')
 
     # ----- Init. CLIP -----
     print_verbose('init clip ...')
 
-    clip = CLIP()
+    clip = CLIP(ver=params['clip_ver'])
 
     print_verbose('done!\n')
 
@@ -121,10 +121,19 @@ if __name__ == '__main__':
     print_verbose('loading dataframe ...')
 
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
-    subset_file_name = prefix + file_name_wo_prefix.replace('parquet', postfix + '.parquet')
-    subset_file_path = os.path.join(params['laion_path'], subset_file_name)
+    subset_file_name = prefix + '_' + file_name_wo_prefix
+    subset_with_sims_file_name = \
+        configs.NamingConfig.append_with_sims_to_all_queries(prefix, params['clip_ver']) + '_' + file_name_wo_prefix
 
-    df = pd.read_parquet(subset_file_path)
+    if os.path.exists(os.path.join(params['laion_path'], subset_with_sims_file_name)):
+        print_verbose('\tfound a file already containing sims to all queries:')
+        print_verbose(f'\t{subset_with_sims_file_name}')
+
+        df = pd.read_parquet(os.path.join(params['laion_path'], subset_with_sims_file_name))
+    else:
+        df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+
+    df = df.iloc[:10]
 
     print_verbose('done!\n')
 
@@ -199,7 +208,7 @@ if __name__ == '__main__':
             print_verbose('saving ....')
 
             df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
-            df.to_parquet(subset_file_path, index=True)
+            df.to_parquet(os.path.join(params['laion_path'], subset_with_sims_file_name), index=True)
 
             all_indices = []
             all_similarities = []
@@ -219,8 +228,8 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = subset_file_path.replace('parquet', 'imgallqueriessim_errors.txt')
-    with open(err_file_path, 'w') as f:
+    err_file_name = prefix + '_' + f'imgallqueriessim_errors_{params["clip_ver"]}.txt'
+    with open(os.path.join(params['laion_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
     print_verbose('done!\n')
@@ -229,7 +238,7 @@ if __name__ == '__main__':
 
     if len(all_indices) > 0:
         df.loc[all_indices, [image_to_query_col_func(wnid) for wnid in all_wnids]] = np.array(all_similarities)
-        df.to_parquet(subset_file_path, index=True)
+        df.to_parquet(os.path.join(params['laion_path'], subset_with_sims_file_name), index=True)
     else:
         print_verbose('\talready saved!')
 
