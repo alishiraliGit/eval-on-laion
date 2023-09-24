@@ -6,10 +6,9 @@ import argparse
 from PIL import Image
 from io import BytesIO
 import numpy as np
-# import pandas as pd
+import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.preprocessing import normalize
-import dask.dataframe as dd
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -92,7 +91,7 @@ if __name__ == '__main__':
     # Compute
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
-    # Prefix/Postfix
+    # Prefix
     prefix = params['prefix']
 
     # Query
@@ -130,9 +129,9 @@ if __name__ == '__main__':
         print_verbose('\tfound a file already containing sims to all queries:')
         print_verbose(f'\t{subset_with_sims_file_name}')
 
-        df = dd.read_parquet(os.path.join(params['laion_path'], subset_with_sims_file_name))
+        df = pd.read_parquet(os.path.join(params['laion_path'], subset_with_sims_file_name))
     else:
-        df = dd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+        df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
     print_verbose('done!\n')
 
