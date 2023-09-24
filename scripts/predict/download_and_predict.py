@@ -352,15 +352,6 @@ if __name__ == '__main__':
         update_pred_pb(prediction_pb, prediction_results)
         time.sleep(0.05)
 
-    # ----- Close progress bars and processes -----
-    prediction_pb.close()
-
-    pool_download.close()
-    pool_download.join()
-
-    pool_predict.close()
-    pool_predict.join()
-
     time.sleep(3)
 
     # ----- Collect the results ------
@@ -403,3 +394,12 @@ if __name__ == '__main__':
         model2pred[model_name].to_csv(os.path.join(params['save_path'], pred_file_name), index=True)
 
     print_verbose('done!\n')
+
+    # ----- Close progress bars and processes -----
+    prediction_pb.close()
+
+    pool_download.close()
+    pool_download.join()
+
+    pool_predict.close()
+    pool_predict.join()
