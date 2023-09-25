@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.preprocessing import normalize
+import gc
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -241,3 +242,6 @@ if __name__ == '__main__':
         print_verbose('\talready saved!')
 
     print_verbose('done!\n')
+
+    del df
+    gc.collect()
