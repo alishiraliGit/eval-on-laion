@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     # Chunks
     parser.add_argument('--chunk_size', type=int, default=100000)
+    parser.add_argument('--from_chunk', type=int, default=1)
 
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
@@ -74,6 +75,9 @@ if __name__ == '__main__':
 
     # ----- Loop over chunks -----
     for ch, ch_start in enumerate(range(0, len(df_all), ch_size)):
+        if ch + 1 < params['from_chunk']:
+            continue
+
         print_verbose(f'chunk {ch + 1} ...')
 
         ch_prefix = prefix + f'_chunk{ch + 1}'
