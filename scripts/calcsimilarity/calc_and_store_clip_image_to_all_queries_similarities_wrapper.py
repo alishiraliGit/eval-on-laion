@@ -95,5 +95,4 @@ if __name__ == '__main__':
         if not verbose:
             ch_cmd.append('--no_verbose')
 
-        # subprocess.run(ch_cmd, text=True, check=True)
-        print(ch_start, ch_size)
+        subprocess.run(ch_cmd, text=True, check=True)
