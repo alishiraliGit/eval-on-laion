@@ -3,7 +3,6 @@ import os
 import argparse
 import subprocess
 import pandas as pd
-from tqdm.auto import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
@@ -59,6 +58,7 @@ if __name__ == '__main__':
 
     # Chunk size
     ch_size = params.pop('chunk_size')
+    from_ch = params.pop('from_chunk')
 
     # Compute
     no_gpu = params.pop('no_gpu')
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     # ----- Loop over chunks -----
     for ch, ch_start in enumerate(range(0, len(df_all), ch_size)):
-        if ch + 1 < params['from_chunk']:
+        if ch + 1 < from_ch:
             continue
 
         print_verbose(f'chunk {ch + 1} ...')
