@@ -73,7 +73,7 @@ if __name__ == '__main__':
     print_verbose('done!\n')
 
     # ----- Loop over chunks -----
-    for ch, ch_start in enumerate(df_all.index[::ch_size]):
+    for ch, ch_start in enumerate(range(0, len(df_all), ch_size)):
         print_verbose(f'chunk {ch + 1} ...')
 
         ch_prefix = prefix + f'_chunk{ch + 1}'
@@ -95,4 +95,5 @@ if __name__ == '__main__':
         if not verbose:
             ch_cmd.append('--no_verbose')
 
-        subprocess.run(ch_cmd, text=True, check=True)
+        # subprocess.run(ch_cmd, text=True, check=True)
+        print(ch_start, ch_size)
