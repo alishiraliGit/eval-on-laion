@@ -68,12 +68,12 @@ if __name__ == '__main__':
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_name = prefix + '_' + file_name_wo_prefix
 
-    df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+    df_all = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
 
     print_verbose('done!\n')
 
     # ----- Loop over chunks -----
-    for ch, ch_start in enumerate(df.index[::ch_size]):
+    for ch, ch_start in enumerate(df_all.index[::ch_size]):
         print_verbose(f'chunk {ch + 1} ...')
 
         ch_prefix = prefix + f'_chunk{ch + 1}'
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         subset_ch_file_path = os.path.join(params['laion_path'], subset_ch_file_name)
 
         if not os.path.exists(subset_ch_file_path):
-            ch_df = df.iloc[ch_start: (ch_start + ch_size)]
+            ch_df = df_all.iloc[ch_start: (ch_start + ch_size)]
             ch_df.to_parquet(subset_ch_file_path, index=True)
 
         params['prefix'] = ch_prefix
