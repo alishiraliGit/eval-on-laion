@@ -29,7 +29,7 @@ def download_image_wrapper(args):
         verify_image(img_content)
         return idx, img_content, None
     except Exception as e:
-        return idx, None, {'cause': f'In downloading image of index {idx} an error occurred.', 'error': e}
+        return idx, None, {'cause': f'In downloading image of index {idx} an error occurred.', 'error': str(e)}
 
 
 def calc_image_to_text_similarities(idx_img_txt_list, clip_mdl: CLIP):
