@@ -38,7 +38,7 @@ imagenet_captions_imgtxtsim_errors.txt
 ILSVRC2012_val_predicted.parquet
 imageneta
 imagenet_captions_with_sims_to_all_queries.parquet
-ILSVRC2012_val_with_sims_to_all_queries.parquet
+ILSVRC2012_val_with_sims_to_all_queries*.parquet
 imagenetv2-matched-frequency
 imagenetv2-threshold0.7
 imagenetv2-top-images

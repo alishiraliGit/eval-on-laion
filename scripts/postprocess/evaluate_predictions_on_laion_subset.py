@@ -9,7 +9,6 @@ from tqdm.auto import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
-import configs
 from utils import utils
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
@@ -62,16 +61,9 @@ if __name__ == '__main__':
 
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_name = prefix + '_' + file_name_wo_prefix
-    subset_pred_file_name = configs.NamingConfig.append_predicted(prefix) + '_' + file_name_wo_prefix
+    subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
-    if os.path.exists(os.path.join(params['laion_path'], subset_pred_file_name)):
-        print_verbose('\tfound a file already containing predictions:')
-        print_verbose(f'\t{subset_pred_file_name}')
-
-        df = pd.read_parquet(os.path.join(params['laion_path'], subset_pred_file_name))
-
-    else:
-        df = pd.read_parquet(os.path.join(params['laion_path'], subset_file_name))
+    df = pd.read_parquet(subset_file_path)
 
     print_verbose(f'\tfound {len(df)} rows.')
 
@@ -178,6 +170,6 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    df.to_parquet(os.path.join(params['laion_path'], subset_pred_file_name), index=True)
+    df.to_parquet(subset_file_path, index=True)
 
     print_verbose('done!\n')
