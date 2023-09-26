@@ -66,8 +66,8 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    # ----- Load LAION subset -----
-    print_verbose('loading df ...')
+    # ----- Load dataframe -----
+    print_verbose('loading dataframe ...')
 
     df_file_name = prefix + '.parquet'
     df = pd.read_parquet(os.path.join(params['load_path'], df_file_name))
