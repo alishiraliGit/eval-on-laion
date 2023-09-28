@@ -72,6 +72,10 @@ class NamingConfig:
     def append_with_sims_to_all_queries(prefix, clip_ver):
         return prefix + f'_with_sims_to_all_queries_{clip_ver}'
 
+    @staticmethod
+    def append_skimmed(prefix):
+        return prefix + '_skimmed'
+
 
 class LAIONConfig:
     URL_BASE = 'https://deploy.laion.ai/8f83b608504d46bb81708ec86e912220/dataset/'
