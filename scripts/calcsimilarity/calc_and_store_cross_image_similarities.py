@@ -41,7 +41,7 @@ def load_image_and_calc_embeddings(inds, img_contents, clip_mdl: CLIP):
             errs.append(
                 {
                     'cause': f'In loading image of index {inds[i_i]} from image content an error occurred.',
-                    'error': e
+                    'error': str(e)
                 }
             )
 

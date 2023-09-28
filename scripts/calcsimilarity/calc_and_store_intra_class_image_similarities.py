@@ -35,7 +35,7 @@ def download_images_wrapper(args):
             img_contents.append(img_content)
         except Exception as e:
             img_contents.append(None)
-            errs.append({'cause': f'In downloading image of index {inds[i_url]} an error occurred.', 'error': e})
+            errs.append({'cause': f'In downloading image of index {inds[i_url]} an error occurred.', 'error': str(e)})
 
     return w, inds, img_contents, errs
 
@@ -68,7 +68,7 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
             errs.append(
                 {
                     'cause': f'In loading image of index {inds[i_i]} from image content an error occurred.',
-                    'error': e
+                    'error': str(e)
                 }
             )
 
@@ -84,7 +84,7 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
         sims = embs.dot(embs.T)
     except Exception as e:
         sims = []
-        errs.append({'cause': 'In calc. image cross similarities an error occurred.', 'error': e})
+        errs.append({'cause': 'In calc. image cross similarities an error occurred.', 'error': str(e)})
 
     # Close the images
     for img in imgs:
@@ -101,14 +101,13 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
 
+    parser.add_argument('--prefix', type=str, help='Look at configs.NamingConfig for conventions.')
+
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
-    parser.add_argument('--labels_file_name', type=str)
+    parser.add_argument('--labels_key', type=str, default='wnid', help='currently, only wnid supported.')  # TODO
 
     parser.add_argument('--save_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'clip_image_similarities'))
-
-    # Method
-    parser.add_argument('--method', type=str, help='Look at configs.LAIONConfig.')
 
     # Sample
     parser.add_argument('--do_sample', action='store_true')
@@ -136,11 +135,11 @@ if __name__ == '__main__':
     ptu.init_gpu(use_gpu=not params['no_gpu'], gpu_id=params['gpu_id'])
 
     # Set the files prefix
-    prefix = configs.LAIONConfig.method_to_prefix(params['method'])
+    prefix = params['prefix']
 
     # Saving
     os.makedirs(params['save_path'], exist_ok=True)
-    wnid2savefilename = lambda w: prefix + f'img_img_sims({w}).pkl'
+    wnid2savefilename = lambda w: prefix + f'_img_img_sims({w}).pkl'
 
     print_verbose('done!\n')
 
@@ -156,7 +155,7 @@ if __name__ == '__main__':
 
     # Load
     file_name_wo_prefix = laionu.get_laion_subset_file_name(0, params['laion_until_part'])
-    subset_file_name = prefix + file_name_wo_prefix
+    subset_file_name = prefix + '_' + file_name_wo_prefix
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
@@ -166,7 +165,8 @@ if __name__ == '__main__':
     # ----- Load LAION labels -----
     print_verbose('loading labels ...')
 
-    with open(os.path.join(params['labels_path'], params['labels_file_name']), 'rb') as f:
+    labels_file_name = f'{params["labels_key"]}2laionindices({prefix}).pkl'
+    with open(os.path.join(params['labels_path'], labels_file_name), 'rb') as f:
         wnid2laionindices = pickle.load(f)
 
     print_verbose('done!\n')
