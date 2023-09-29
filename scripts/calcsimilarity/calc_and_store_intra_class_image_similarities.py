@@ -231,7 +231,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_name = prefix + 'img_img_sims_errors.txt'
+    err_file_name = prefix + '_img_img_sims_errors.txt'
     with open(os.path.join(params['save_path'], err_file_name), 'w') as f:
         f.write('\n'.join(errors))
 
