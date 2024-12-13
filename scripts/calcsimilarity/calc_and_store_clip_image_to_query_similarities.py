@@ -77,6 +77,10 @@ if __name__ == '__main__':
                         default=os.path.join('ilsvrc2012', 'processed',
                                              'lemma2wnid(unique_in_ilsvrc_ignored_empty_wnids).pkl'))
 
+    # Subset
+    parser.add_argument('--from_iloc', type=int, default=0)
+    parser.add_argument('--to_iloc', type=int, default=-1)
+
     # Query
     parser.add_argument('--query_type', type=str, default=QueryType.NAME_DEF)
     parser.add_argument('--query_key', type=str, help='wnid or lemma. Look at queries.QueryKey.')
@@ -133,6 +137,12 @@ if __name__ == '__main__':
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
+
+    # Subset
+    if params['to_iloc'] > 0:
+        df = df.iloc[params['from_iloc']: params['to_iloc']]
+    else:
+        df = df.iloc[params['from_iloc']:]
 
     print_verbose(f'\tfound {len(df)} rows.')
     print_verbose('done!\n')
