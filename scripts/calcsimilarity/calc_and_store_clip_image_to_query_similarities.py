@@ -138,8 +138,15 @@ if __name__ == '__main__':
     else:
         appended_prefix = prefix
 
-    subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
-    subset_file_path = os.path.join(params['laion_path'], subset_file_name)
+    subset_save_file_name = appended_prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+    subset_save_file_path = os.path.join(params['laion_path'], subset_save_file_name)
+
+    if os.path.exists(subset_save_file_path):
+        subset_file_name = subset_save_file_name
+        subset_file_path = subset_save_file_path
+    else:
+        subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
+        subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
     df = pd.read_parquet(subset_file_path)
 
@@ -267,7 +274,7 @@ if __name__ == '__main__':
             print_verbose('saving ....')
 
             df.loc[all_indices, image_to_query_sim_col] = all_similarities
-            df.to_parquet(subset_file_path, index=True)
+            df.to_parquet(subset_save_file_path, index=True)
 
             all_indices = []
             all_similarities = []
@@ -287,7 +294,7 @@ if __name__ == '__main__':
     # ----- Save error logs ------
     print_verbose('saving error logs ....')
 
-    err_file_path = subset_file_path.replace('parquet', 'imgquerysim_errors.txt')
+    err_file_path = subset_save_file_path.replace('parquet', 'imgquerysim_errors.txt')
     with open(err_file_path, 'w') as f:
         f.write('\n'.join(errors))
 
@@ -297,7 +304,7 @@ if __name__ == '__main__':
 
     if len(all_indices) > 0:
         df.loc[all_indices, image_to_query_sim_col] = all_similarities
-        df.to_parquet(subset_file_path, index=True)
+        df.to_parquet(subset_save_file_path, index=True)
     else:
         print_verbose('\talready saved!')
 
