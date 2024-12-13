@@ -133,6 +133,11 @@ if __name__ == '__main__':
     # ----- Load the subset -----
     print_verbose('loading laion subset ...')
 
+    if params['from_iloc'] > 0 or params['to_iloc'] > 0:
+        appended_prefix = prefix + f'_from{params["from_iloc"]}_to{params["to_iloc"]}'
+    else:
+        appended_prefix = prefix
+
     subset_file_name = prefix + '_' + laionu.get_laion_subset_file_name(0, params['laion_until_part'])
     subset_file_path = os.path.join(params['laion_path'], subset_file_name)
 
