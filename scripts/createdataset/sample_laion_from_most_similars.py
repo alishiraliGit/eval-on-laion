@@ -31,7 +31,8 @@ if __name__ == '__main__':
 
     # Filtering
     parser.add_argument('--similarity_col', type=str)
-    parser.add_argument('--similarity_th', type=float, default=0.82, help='0.82 for CLIP-base, 0.97 for Bert-base')
+    parser.add_argument('--similarity_th', type=float,
+                        default=0.82, help='0.82 for CLIP, 0.97 for Bert, 0.58 for MPNet')
 
     parser.add_argument('--remove_nsfw', action='store_true')
 
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     save_prefix = configs.NamingConfig.append_filtered(prefix, params['similarity_col'])
 
     # Save labels
-    labels_file_name = f'{params["labels_key"]}2laionindices({prefix}).pkl'
+    labels_file_name = f'{params["labels_key"]}2laionindices({save_prefix}).pkl'
 
     with open(os.path.join(params['labels_path'], labels_file_name), open_type) as f:
         pickle.dump(key2laionindices_sampled, f)
