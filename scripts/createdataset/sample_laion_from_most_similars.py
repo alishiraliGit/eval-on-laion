@@ -102,7 +102,10 @@ if __name__ == '__main__':
     # Choose indices
     all_laionindices = set()
     key2laionindices_sampled = {}
+    index_set = set(df.index)
     for key, laionindices in tqdm(key2laionindices.items()):
+        laionindices = list(index_set.intersection(laionindices))
+
         sims = np.array(df.loc[laionindices, params['similarity_col']].tolist())
 
         laionindices_sampled = np.array(laionindices)[sims > params['similarity_th']].tolist()
