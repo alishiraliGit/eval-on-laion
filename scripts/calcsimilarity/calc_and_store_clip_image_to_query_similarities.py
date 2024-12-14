@@ -151,10 +151,11 @@ if __name__ == '__main__':
     df = pd.read_parquet(subset_file_path)
 
     # Subset
-    if params['to_iloc'] > 0:
-        df = df.iloc[params['from_iloc']: params['to_iloc']]
-    else:
-        df = df.iloc[params['from_iloc']:]
+    if not os.path.exists(subset_save_file_path):
+        if params['to_iloc'] > 0:
+            df = df.iloc[params['from_iloc']: params['to_iloc']]
+        else:
+            df = df.iloc[params['from_iloc']:]
 
     print_verbose(f'\tfound {len(df)} rows.')
     print_verbose('done!\n')
