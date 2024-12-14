@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     # Column names
     query_col = params['query_type'] + '_' + params['query_key']
-    image_to_query_sim_col = f'image_to_{params["query_type"]}_similarity_{params["clip_ver"]}'
+    image_to_query_sim_col = f'image_to_{query_col}_similarity_{params["clip_ver"]}'
 
     print_verbose('done!\n')
 

@@ -24,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--laion_path', type=str, default=os.path.join('laion400m'))
     parser.add_argument('--laion_until_part', type=int, default=31)
     parser.add_argument('--load_prefix', type=str, help='Look at configs.NamingConfig for conventions.')
+    parser.add_argument('--save_prefix', type=str, default='', help='If empty, will use configs.NamingConfig.')
 
     parser.add_argument('--labels_path', type=str, default=os.path.join('laion400m', 'processed', 'ilsvrc_labels'))
     parser.add_argument('--labels_filter', type=str, default='wnid2laionindices(substring_matched_part*).pkl')
@@ -122,7 +123,10 @@ if __name__ == '__main__':
     # ----- Save -----
     print_verbose('saving ...')
 
-    save_prefix = configs.NamingConfig.append_filtered(prefix, params['similarity_col'])
+    if len(params['save_prefix']) == 0:
+        save_prefix = configs.NamingConfig.append_filtered(prefix, params['similarity_col'])
+    else:
+        save_prefix = params['save_prefix']
 
     # Save labels
     labels_file_name = f'{params["labels_key"]}2laionindices({save_prefix}).pkl'

@@ -59,6 +59,7 @@ class ILSVRCPredictorsConfig:
 
 class NamingConfig:
     SUBSET_SM_PREFIX = 'subset_sm'
+    SUBSET_SM_LARGE_PREFIX = 'subset_sm_large'
 
     @staticmethod
     def append_filtered(prefix, similarity_col):
@@ -97,6 +98,7 @@ class LAIONConfig:
     SUBSET_IC_MOST_SIMILAR_TXT_TXT_WITH_SIMILAR_LABELS_PREFIX = 'subset_ic_most_sim_txttxt_sim_labels_'
     SUBSET_QUERIED_PREFIX = 'subset_queried_'
 
+    # TODO: using method in scripts is deprecated.
     @staticmethod
     def method_to_prefix(method):
         if method == 'substring_matched':
