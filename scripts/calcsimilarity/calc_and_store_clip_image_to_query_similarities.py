@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
         # Save
         if ((i_batch + 1) % params['save_freq'] == 0) or i_res == (len(df_todo) - 1):
-            print_verbose('saving ....')
+            print_verbose('saving ...')
 
             df.loc[all_indices, image_to_query_sim_col] = all_similarities
             df.to_parquet(subset_save_file_path, index=True)
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     time.sleep(1)
 
     # ----- Save error logs ------
-    print_verbose('saving error logs ....')
+    print_verbose('saving error logs ...')
 
     err_file_path = subset_save_file_path.replace('parquet', 'imgquerysim_errors.txt')
     with open(err_file_path, 'w') as f:
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     print_verbose('done!\n')
 
-    print_verbose('saving ....')
+    print_verbose('saving ...')
 
     if len(all_indices) > 0:
         df.loc[all_indices, image_to_query_sim_col] = all_similarities
