@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # Saving
     os.makedirs(params['save_path'], exist_ok=True)
 
-    prefix = os.path.split(params['dataframe_path'])[1].replace('.parquet', '_')
+    prefix = os.path.split(params['dataframe_path'])[1].replace('.parquet', '')
     postfix = f'({params["image_encoder_ver"]})' if params['use_encoder_ver_in_file_name'] else ''
     wnid2savefilename = lambda w: prefix + f'_img_img_sims({w}){postfix}.pkl'
 
