@@ -18,7 +18,7 @@ from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
 from utils import laion_utils as laionu
 from core.retrieve_image import download_image_content, verify_image
-from core.foundationmodels.clip import CLIP
+from core.image_encoders import select_image_encoder
 
 
 def download_images_wrapper(args):
@@ -51,7 +51,7 @@ def df_gen(wnid2inds, dataframe, min_len=2):
         yield w, inds, urls
 
 
-def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
+def calc_image_cross_similarities(inds, img_contents, img_enc):
     # Load the images
     errs = []
     imgs = []
@@ -79,7 +79,7 @@ def calc_image_cross_similarities(inds, img_contents, clip_mdl: CLIP):
 
     # Calc. similarities
     try:
-        embs = clip_mdl.image_embeds(imgs)
+        embs = img_enc(imgs)
         embs = normalize(embs, axis=1, norm='l2')
         sims = embs.dot(embs.T)
     except Exception as e:
@@ -108,6 +108,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'clip_image_similarities'))
+
+    # Image encoder
+    parser.add_argument('--image_encoder_ver', type=str, default=configs.CLIPConfig.DEFAULT_VERSION)
+    parser.add_argument('--use_encoder_ver_in_file_name', action='store_true')
 
     # Sample
     parser.add_argument('--do_sample', action='store_true')
@@ -139,14 +143,16 @@ if __name__ == '__main__':
 
     # Saving
     os.makedirs(params['save_path'], exist_ok=True)
-    wnid2savefilename = lambda w: prefix + f'_img_img_sims({w}).pkl'
+
+    postfix = f'({params["image_encoder_ver"]})' if params['use_encoder_ver_in_file_name'] else ''
+    wnid2savefilename = lambda w: prefix + f'_img_img_sims({w}){postfix}.pkl'
 
     print_verbose('done!\n')
 
-    # ----- Init. CLIP -----
-    print_verbose('init clip ...')
+    # ----- Init. encoder -----
+    print_verbose('init image encoder ...')
 
-    clip = CLIP()
+    image_encoder, _ = select_image_encoder(params['image_encoder_ver'])
 
     print_verbose('done!\n')
 
@@ -201,7 +207,7 @@ if __name__ == '__main__':
 
         # Calc. similarities
         success_laion_indices, similarities, sim_errors = \
-            calc_image_cross_similarities(laion_indices, image_contents, clip)
+            calc_image_cross_similarities(laion_indices, image_contents, image_encoder)
 
         for error in sim_errors:
             errors.append('\n' + error['cause'])
