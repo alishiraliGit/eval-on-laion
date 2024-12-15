@@ -9,14 +9,15 @@ from sklearn.preprocessing import normalize
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
 
+import configs
 from utils import logging_utils as logu
 from utils.logging_utils import print_verbose
 from utils import pytorch_utils as ptu
-from core.foundationmodels.clip import CLIP
+from core.image_encoders import select_image_encoder
 
 
-def calc_image_cross_similarities(imgs, clip_mdl: CLIP):
-    embs = clip_mdl.image_embeds(imgs)
+def calc_image_cross_similarities(imgs, img_enc):
+    embs = img_enc(imgs)
     embs = normalize(embs, axis=1, norm='l2')
     sims = embs.dot(embs.T)
 
@@ -37,6 +38,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_path', type=str,
                         default=os.path.join('laion400m', 'processed', 'clip_image_similarities'))
+
+    # Image encoder
+    parser.add_argument('--image_encoder_ver', type=str, default=configs.CLIPConfig.DEFAULT_VERSION)
+    parser.add_argument('--use_encoder_ver_in_file_name', action='store_true')
 
     # Compute
     parser.add_argument('--no_gpu', action='store_true')
@@ -60,14 +65,15 @@ if __name__ == '__main__':
     os.makedirs(params['save_path'], exist_ok=True)
 
     prefix = os.path.split(params['dataframe_path'])[1].replace('.parquet', '_')
-    wnid2savefilename = lambda w: prefix + f'img_img_sims({w}).pkl'
+    postfix = f'({params["image_encoder_ver"]})' if params['use_encoder_ver_in_file_name'] else ''
+    wnid2savefilename = lambda w: prefix + f'_img_img_sims({w}){postfix}.pkl'
 
     print_verbose('done!\n')
 
-    # ----- Init. CLIP -----
-    print_verbose('init clip ...')
+    # ----- Init. encoder -----
+    print_verbose('init image encoder ...')
 
-    clip = CLIP()
+    image_encoder, _ = select_image_encoder(params['image_encoder_ver'])
 
     print_verbose('done!\n')
 
@@ -130,7 +136,7 @@ if __name__ == '__main__':
             continue
 
         # Calc. similarities
-        similarities = calc_image_cross_similarities(images, clip)
+        similarities = calc_image_cross_similarities(images, image_encoder)
 
         # Save similarities
         with open(os.path.join(params['save_path'], wnid2savefilename(wnid)), 'wb') as f:
