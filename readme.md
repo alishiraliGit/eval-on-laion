@@ -35,19 +35,19 @@ The above versions of the LAIONet can readily be found and downloaded in the rep
   <tr>
     <th rowspan="2">Text encoder</th>
     <td><code>clip-vit-base-patch32</code></td>
-    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(clip_0.82)</a> [for paper's main results]
+    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)_no_pred_cols_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(clip_0.82)</a> [for paper's main results]
 + <a href="laion400m/processed/ilsvrc_labels/wnid2laionindices(subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)).pkl">labels dict</a>
 </td>
-    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)_skimmed_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(clip_top50)</a> [Appendix B]
+    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)_skimmed_no_pred_cols_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(clip_top50)</a> [Appendix B]
 + <a href="laion400m/processed/ilsvrc_labels/wnid2laionindices(subset_sm_filt(text_to_name_def_wnid_similarity_clip-vit-base-patch32)_skimmed).pkl">labels dict</a>
 </td>
   </tr>
   <tr>
     <td><code>all-mpnet-base-v2</code></td>
-    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(mpnet_0.58)</a> [Appendix A]
+    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)_no_pred_cols_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(mpnet_0.58)</a> [Appendix A]
 + <a href="laion400m/processed/ilsvrc_labels/wnid2laionindices(subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)).pkl">labels dict</a>
 </td>
-    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)_skimmed_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(mpnet_top50)</a> [Appendix B]
+    <td><a href="laion400m/subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)_skimmed_no_pred_cols_part-00000-to-part00031-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet">LAIONet(mpnet_top50)</a> [Appendix B]
 + <a href="laion400m/processed/ilsvrc_labels/wnid2laionindices(subset_sm_filt(text_to_name_def_wnid_similarity_all-mpnet-base-v2)_skimmed).pkl">labels dict</a>
 </td>
   </tr>
@@ -77,10 +77,9 @@ there are multiple choices for `text_encoder_ver`. We use `clip-vit-base-patch32
 but also report the results for `all-mpnet-base-v2` as well.
 Note that this similarity is how we filter out lowe quality matches to create LAIONet.
   - `recognized_text`: The output of running a text detector and a text recognition tool on the image.
-  - `top_[k]_is_correct_[predictor]`: Whether a predictor's top k predictions include the correct label.
-These columns are not part of LAIONet but we have kept them to simplify reproducibility of the results.
-We only explore top 1 and top 5. For a list of predictors that we will use for evaluation
-see [ilsvrc_predictors.py](core/ilsvrc_predictors.py).
+
+Note that if you want to use above tables to reproduce results in the paper with default arguments of the scripts in this codebase, 
+you need to remove `_no_pred_cols` from file names.
 
 The labels of LAIONet(s) in the above table are pickled, so you may want to use `pickle.load` to load the labels. 
 This will load a Python dictionary with a WordNet ID as key
