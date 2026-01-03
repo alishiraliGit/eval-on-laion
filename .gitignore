@@ -31,6 +31,7 @@ val_img_embeddings.pkl
 del
 from_clip_retrieval
 ilsvrc2012/processed/predictions
+imagenetv2/processed/predictions
 imagenet-captions/processed/labels
 imagenet_captions.json
 imagenet_captions.parquet
